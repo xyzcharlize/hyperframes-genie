@@ -1,4 +1,4 @@
-// Write a Film to disk and render its preview and production cuts.
+// Write a Film to disk. One plan.json, then the local preview cut.
 
 function assert_safe_dir(dir: string) -> string {
     let ok = baml.regex.new("^[A-Za-z0-9._/-]+$").match_full(dir) != null;
@@ -30,9 +30,6 @@ function run_shell(
 class VideoPaths {
     root: string,
     plan: string,
-    preview_plan: string,
-    voice_plan: string,
-    lipsync_plan: string,
     reviews: string,
     renders: string,
 }
@@ -51,9 +48,6 @@ function video_paths(slug: string) -> VideoPaths {
     VideoPaths {
         root: root,
         plan: `${root}/plan.json`,
-        preview_plan: `${root}/preview-plan.json`,
-        voice_plan: `${root}/voice-plan.json`,
-        lipsync_plan: `${root}/lipsync-plan.json`,
         reviews: `${root}/reviews.json`,
         renders: `${root}/renders`,
     }
@@ -67,26 +61,16 @@ function render_output(dir: string, take: string) -> string {
 function resolve_cut(cut: string) -> CutSpec {
     match (cut) {
         "preview" => {
-            CutSpec {
-                quality: "draft",
-                take: "preview-cut",
-                plan_file: "preview-plan.json",
-                renders: true,
-            }
+            CutSpec { quality: "draft", take: "preview-cut", plan_file: "plan.json", renders: true }
         },
         "voice" => {
-            CutSpec {
-                quality: "voice",
-                take: "voice-cut",
-                plan_file: "voice-plan.json",
-                renders: false,
-            }
+            CutSpec { quality: "voice", take: "voice-cut", plan_file: "plan.json", renders: false }
         },
         "lipsync" => {
             CutSpec {
                 quality: "lipsync",
                 take: "lipsync-cut",
-                plan_file: "lipsync-plan.json",
+                plan_file: "plan.json",
                 renders: false,
             }
         },
@@ -158,6 +142,24 @@ function drop_if_present(path: string) -> void {
     }
 }
 
+function drop_legacy_plans(dir: string) -> void {
+    drop_if_present(`${dir}/preview-plan.json`);
+    drop_if_present(`${dir}/voice-plan.json`);
+    drop_if_present(`${dir}/lipsync-plan.json`);
+    drop_if_present(`${dir}/production-plan.json`);
+}
+
+function read_plan(dir: string) -> VideoPlan {
+    baml.json.from_string<VideoPlan>(baml.fs.read(`${dir}/plan.json`))
+}
+
+function write_plan(dir: string, plan: VideoPlan) -> string {
+    let path = `${dir}/plan.json`;
+    baml.fs.write(path, baml.json.to_string(plan));
+    drop_legacy_plans(dir);
+    path
+}
+
 function publish_video(
     dir: string,
     film: Film,
@@ -165,25 +167,15 @@ function publish_video(
     local_voice: string = "af_heart",
     still: string = "assets/avatar-still.png",
 ) -> string {
-    //# Preview is local. Voice and lip-sync start empty. A rewrite drops reviews.
+    //# One plan. HeyGen ids start empty. A rewrite drops reviews and old stage files.
     let safe = write_project(dir, film, check = check);
     baml.fs.mkdir(`${safe}/renders`, baml.fs.MkdirOptions { recursive: true });
     if (!baml.fs.exists(`${safe}/renders/.gitkeep`)) {
         baml.fs.write(`${safe}/renders/.gitkeep`, "");
     }
-    baml.fs.write(`${safe}/plan.json`, baml.json.to_string(plan_from_film(film)));
-    baml.fs.write(
-        `${safe}/preview-plan.json`,
-        baml.json.to_string(preview_plan_from_film(film, voice_id = local_voice, still = still)),
-    );
-    baml.fs.write(
-        `${safe}/voice-plan.json`,
-        baml.json.to_string(empty_voice_plan(film, still = still)),
-    );
-    baml.fs.write(`${safe}/lipsync-plan.json`, baml.json.to_string(empty_lipsync_plan(film)));
+    let _ = write_plan(safe, video_plan_from_film(film, local_voice = local_voice, still = still));
     drop_if_present(`${safe}/reviews.json`);
     drop_if_present(`${safe}/approval.json`);
-    drop_if_present(`${safe}/production-plan.json`);
     safe
 }
 
@@ -245,18 +237,18 @@ function review_stage(
         if (!baml.fs.exists(`${safe}/renders/preview-cut.mp4`)) {
             throw baml.errors.InvalidArgument { message: "Render the preview cut and review it in Studio first." }
         }
-        let preview = baml.json.from_string<PreviewPlan>(baml.fs.read(`${safe}/preview-plan.json`));
+        let plan = read_plan(safe);
         return write_reviews(
             safe,
             Reviews {
-                preview: StageReview { status: status, note: note, script: preview.script, voice_id: "" },
+                preview: StageReview { status: status, note: note, script: plan.script, voice_id: "" },
                 voice: null,
             },
         );
     }
     if (stage == "voice") {
-        let voice = baml.json.from_string<VoicePlan>(baml.fs.read(`${safe}/voice-plan.json`));
-        if (voice.voice_id == "") {
+        let plan = read_plan(safe);
+        if (plan.voice_id == "") {
             throw baml.errors.InvalidArgument { message: "Swap the local voice to a HeyGen voice_id before this review." }
         }
         return write_reviews(
@@ -266,8 +258,8 @@ function review_stage(
                 voice: StageReview {
                     status: status,
                     note: note,
-                    script: voice.script,
-                    voice_id: voice.voice_id,
+                    script: plan.script,
+                    voice_id: plan.voice_id,
                 },
             },
         );
@@ -286,34 +278,26 @@ function reject(dir: string, stage: string = "preview", note: string = "") -> st
 function swap_voice(dir: string, voice_id: string) -> string {
     //# Keep the still avatar. Replace only the local voice. Do not call HeyGen.
     let safe = assert_safe_dir(dir);
-    let preview = baml.json.from_string<PreviewPlan>(baml.fs.read(`${safe}/preview-plan.json`));
-    let block = voice_swap_block(read_reviews(safe).preview, preview.script, voice_id);
+    let plan = read_plan(safe);
+    let block = voice_swap_block(read_reviews(safe).preview, plan.script, voice_id);
     if (block != null) {
         throw baml.errors.InvalidArgument { message: block }
     }
-    let voice = voice_plan_from_preview(preview, voice_id);
-    baml.fs.write(`${safe}/voice-plan.json`, baml.json.to_string(voice));
-    baml.fs.write(
-        `${safe}/lipsync-plan.json`,
-        baml.json.to_string(lipsync_plan_from_voice(voice, "")),
-    );
+    let path = write_plan(safe, with_voice(plan, voice_id));
     let reviews = read_reviews(safe);
     write_reviews(safe, Reviews { preview: reviews.preview, voice: null });
-    `${safe}/voice-plan.json`
+    path
 }
 
 function add_lipsync(dir: string, avatar_id: string) -> string {
     //# Attach the avatar to the reviewed voice. Do not start the paid render.
     let safe = assert_safe_dir(dir);
-    let voice = baml.json.from_string<VoicePlan>(baml.fs.read(`${safe}/voice-plan.json`));
-    let plan = lipsync_plan_from_voice(voice, avatar_id);
+    let plan = with_avatar(read_plan(safe), avatar_id);
     let block = lipsync_block(read_reviews(safe).voice, plan);
     if (block != null) {
         throw baml.errors.InvalidArgument { message: block }
     }
-    let path = `${safe}/lipsync-plan.json`;
-    baml.fs.write(path, baml.json.to_string(plan));
-    path
+    write_plan(safe, plan)
 }
 
 function render_cut(dir: string, cut: string) -> string {

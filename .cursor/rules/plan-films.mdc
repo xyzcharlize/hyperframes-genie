@@ -3,7 +3,7 @@ description: Plan HyperFrames films in this Cursor chat, then render with BAML
 alwaysApply: true
 ---
 
-When asked for a video, write one `FilmPlan` story that matches `baml_src/film.baml` and run `baml run main -- --plan_file videos/<slug>/plan.json`. That writes three stages from the same story. Follow this order and stop at each Studio review:
+When asked for a video, write one `FilmPlan` story that matches `baml_src/film.baml` and run `baml run main -- --plan_file videos/<slug>/plan.json`. That writes one `plan.json`. `local_voice_id` starts as the Kokoro voice. `voice_id` and `avatar_id` start empty and are filled by the later steps. Follow this order and stop at each Studio review:
 
 1. Preview cut, as it is now: still avatar and local Kokoro TTS. `baml run render_cut -- --dir videos/<slug> --cut preview` writes `renders/preview-cut.mp4` and opens HyperFrames Studio. Give the person the `studioUrl`.
 2. Wait for their review. Then `baml run approve -- --dir videos/<slug> --stage preview`, or `reject` if they say no.
@@ -11,4 +11,4 @@ When asked for a video, write one `FilmPlan` story that matches `baml_src/film.b
 4. Open Studio again: `baml run open_studio -- --dir videos/<slug> --cut voice`. Wait for that review, then `baml run approve -- --dir videos/<slug> --stage voice`.
 5. Add the HeyGen lip-sync avatar only after that voice review: `baml run add_lipsync -- --dir videos/<slug> --avatar_id <avatar>`. It keeps the reviewed `voice_id`. Do not start the paid lip-sync, do not call HeyGen, and do not ask for an API key.
 
-Republishing the story deletes `reviews.json`. The subscription model in this chat is the planner.
+Republishing the story rewrites `plan.json`, clears `voice_id` and `avatar_id`, and deletes `reviews.json`. The subscription model in this chat is the planner.

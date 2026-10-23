@@ -1,14 +1,11 @@
 # videos
 
-One folder per video. One story, then three stages. Studio is the review between them.
+One folder per video. One plan.json moves through three stages. Studio is the review between them.
 
 ```text
 videos/
   <slug>/
-    plan.json            # FilmPlan story
-    preview-plan.json    # still avatar, local Kokoro TTS
-    voice-plan.json      # still avatar, HeyGen voice_id
-    lipsync-plan.json    # HeyGen lip-sync using that reviewed voice
+    plan.json            # story plus local_voice_id, voice_id, and avatar_id
     reviews.json         # preview review, then voice review; not committed
     index.html
     compositions/
@@ -16,4 +13,4 @@ videos/
       preview-cut.mp4   # the only local render
 ```
 
-Order: render the preview, review it in Studio, swap the voice from local to HeyGen, review that in Studio, then add the lip-sync avatar. Republishing the story deletes the reviews.
+Order: render the preview, review it in Studio, swap the voice from local to HeyGen, review that in Studio, then add the lip-sync avatar. Those later steps fill `voice_id` and `avatar_id` on `plan.json`. Republishing the story rewrites that file and deletes the reviews.

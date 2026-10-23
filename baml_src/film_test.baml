@@ -138,21 +138,19 @@ test "each video keeps its plan and its two cuts" {
     assert.equal(paths.root, "videos/ceramic-studio");
     assert.equal(paths.plan, "videos/ceramic-studio/plan.json");
     assert.equal(paths.renders, "videos/ceramic-studio/renders");
-    assert.equal(paths.preview_plan, "videos/ceramic-studio/preview-plan.json");
-    assert.equal(paths.voice_plan, "videos/ceramic-studio/voice-plan.json");
-    assert.equal(paths.lipsync_plan, "videos/ceramic-studio/lipsync-plan.json");
     assert.equal(paths.reviews, "videos/ceramic-studio/reviews.json");
     assert.equal(preview.quality, "draft");
     assert.equal(preview.take, "preview-cut");
+    assert.equal(preview.plan_file, "plan.json");
     assert.equal(preview.renders, true);
     assert.equal(render_quality(preview.quality), "draft");
     assert.equal(cut_output(paths.root, "preview"), "videos/ceramic-studio/renders/preview-cut.mp4");
     assert.equal(voice.quality, "voice");
     assert.equal(voice.renders, false);
-    assert.equal(voice.plan_file, "voice-plan.json");
+    assert.equal(voice.plan_file, "plan.json");
     assert.equal(lipsync.quality, "lipsync");
     assert.equal(lipsync.renders, false);
-    assert.equal(lipsync.plan_file, "lipsync-plan.json");
+    assert.equal(lipsync.plan_file, "plan.json");
     assert.equal(render_output(paths.root, "looks"), "videos/ceramic-studio/renders/looks.mp4");
     let film = demo_film();
     let plan = plan_from_film(film);
@@ -172,50 +170,42 @@ test "an unknown cut is rejected" {
     assert.equal(named, "cut must be preview, voice, or lipsync")
 }
 
-test "one story makes a local preview plan and a HeyGen production plan" {
+test "one plan starts with a local voice and empty HeyGen ids" {
     let film = demo_film();
-    let preview = preview_plan_from_film(film);
-    let voice = empty_voice_plan(film);
-    let lipsync = empty_lipsync_plan(film);
-    let again = baml.json.from_string<PreviewPlan>(baml.json.to_string(preview));
-    assert.equal(again.avatar, "still");
-    assert.equal(again.voice, "local-tts");
-    assert.equal(preview.voice_id, "af_heart");
-    assert.equal(voice.avatar, "still");
-    assert.equal(voice.voice, "heygen");
-    assert.equal(voice.voice_id, "");
-    assert.equal(lipsync.avatar, "heygen-lipsync");
-    assert.equal(lipsync.avatar_id, "");
-    assert.equal(lipsync.voice_id, "");
-    assert.equal(preview.script, voice.script);
-    assert.equal(preview.script, lipsync.script);
-    assert.equal(preview.script, narration_script(film.beats))
+    let plan = video_plan_from_film(film);
+    let again = baml.json.from_string<VideoPlan>(baml.json.to_string(plan));
+    assert.equal(again.local_voice_id, "af_heart");
+    assert.equal(again.still, "assets/avatar-still.png");
+    assert.equal(again.voice_id, "");
+    assert.equal(again.avatar_id, "");
+    assert.equal(again.script, narration_script(film.beats));
+    assert.equal(again.title, plan.title)
 }
 
 test "production stays blocked until a person approves the same script" {
     let film = demo_film();
-    let preview = preview_plan_from_film(film);
-    let missing = voice_swap_block(null, preview.script, "voc1") ?? "";
+    let plan = video_plan_from_film(film);
+    let missing = voice_swap_block(null, plan.script, "voc1") ?? "";
     let rejected = voice_swap_block(
-        StageReview { status: "rejected", note: "no", script: preview.script, voice_id: "" },
-        preview.script,
+        StageReview { status: "rejected", note: "no", script: plan.script, voice_id: "" },
+        plan.script,
         "voc1",
     )
         ?? "";
     let unnamed = voice_swap_block(
-        StageReview { status: "approved", note: "ok", script: preview.script, voice_id: "" },
-        preview.script,
+        StageReview { status: "approved", note: "ok", script: plan.script, voice_id: "" },
+        plan.script,
         "",
     )
         ?? "";
-    let swapped = voice_plan_from_preview(preview, "voc1");
+    let swapped = with_voice(plan, "voc1");
     let voice_ok = voice_swap_block(
-        StageReview { status: "approved", note: "ok", script: preview.script, voice_id: "" },
-        preview.script,
+        StageReview { status: "approved", note: "ok", script: plan.script, voice_id: "" },
+        plan.script,
         "voc1",
     );
-    let no_voice_review = lipsync_block(null, lipsync_plan_from_voice(swapped, "ava1")) ?? "";
-    let ready_plan = lipsync_plan_from_voice(swapped, "ava1");
+    let no_voice_review = lipsync_block(null, with_avatar(swapped, "ava1")) ?? "";
+    let ready_plan = with_avatar(swapped, "ava1");
     let ready = lipsync_block(
         StageReview { status: "approved", note: "ok", script: swapped.script, voice_id: "voc1" },
         ready_plan,
@@ -228,9 +218,9 @@ test "production stays blocked until a person approves the same script" {
         "Name the HeyGen voice_id. It replaces the local voice and is often not an avatar's default voice.",
     );
     assert.equal(voice_ok, null);
-    assert.equal(swapped.avatar, "still");
-    assert.equal(swapped.voice, "heygen");
+    assert.equal(swapped.local_voice_id, "af_heart");
     assert.equal(swapped.voice_id, "voc1");
+    assert.equal(swapped.avatar_id, "");
     assert.equal(
         no_voice_review,
         "Review the HeyGen voice in Studio before adding the lip-sync avatar.",
