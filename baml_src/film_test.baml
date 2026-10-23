@@ -130,19 +130,47 @@ test "copy is escaped and a saved plan parses" {
     assert.equal(parsed.beats.at(0)?.headline ?? "", "Hello")
 }
 
-test "each video keeps its plan and its renders apart" {
+test "each video keeps its plan and its two cuts" {
     let paths = video_paths("ceramic-studio");
+    let preview = resolve_cut("preview");
+    let production = resolve_cut("production");
     assert.equal(paths.root, "videos/ceramic-studio");
     assert.equal(paths.plan, "videos/ceramic-studio/plan.json");
     assert.equal(paths.renders, "videos/ceramic-studio/renders");
-    assert.equal(render_output(paths.root, "draft"), "videos/ceramic-studio/renders/draft.mp4");
+    assert.equal(preview.quality, "draft");
+    assert.equal(preview.take, "preview-cut");
+    assert.equal(render_quality(preview.quality), "draft");
+    assert.equal(safe_id(preview.take), "preview-cut");
+    assert.equal(cut_output(paths.root, "preview"), "videos/ceramic-studio/renders/preview-cut.mp4");
+    assert.equal(production.quality, "delivery");
+    assert.equal(production.take, "production-cut");
+    assert.equal(render_quality(production.quality), "delivery");
+    assert.equal(safe_id(production.take), "production-cut");
     assert.equal(
-        render_output(paths.root, "delivery"),
-        "videos/ceramic-studio/renders/delivery.mp4",
+        cut_output(paths.root, "production"),
+        "videos/ceramic-studio/renders/production-cut.mp4",
     );
+    assert.equal(render_output(paths.root, "looks"), "videos/ceramic-studio/renders/looks.mp4");
     let film = demo_film();
     let plan = plan_from_film(film);
     assert.equal(plan.slug, "hyperframes-genie");
     assert.equal(plan.aspect, Aspect.Landscape);
     assert.equal(plan.beats.length(), 3)
+}
+
+test "an unknown cut is rejected" {
+    let looks = cut_output("videos/ceramic-studio", "looks") catch (e) {
+        baml.errors.InvalidArgument => e.message,
+    };
+    let named = cut_output("videos/ceramic-studio", "preview-cut") catch (e) {
+        baml.errors.InvalidArgument => e.message,
+    };
+    assert.equal(
+        looks,
+        "cut must be preview (draft, renders/preview-cut.mp4) or production (delivery, renders/production-cut.mp4)",
+    );
+    assert.equal(
+        named,
+        "cut must be preview (draft, renders/preview-cut.mp4) or production (delivery, renders/production-cut.mp4)",
+    )
 }

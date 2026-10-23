@@ -1,4 +1,4 @@
-// Write a Film to disk and, when asked, scaffold or check it with Hyperframes.
+// Write a Film to disk and render its preview and production cuts.
 
 function assert_safe_dir(dir: string) -> string {
     let ok = baml.regex.new("^[A-Za-z0-9._/-]+$").match_full(dir) != null;
@@ -33,6 +33,12 @@ class VideoPaths {
     renders: string,
 }
 
+class CutSpec {
+    quality: string @description("draft for preview, delivery for production"),
+    take: string @description("preview-cut or production-cut"),
+    @@description("Preview-cut first, then production-cut.")
+}
+
 // One folder per video: plan, composition, and a renders/ directory for every take.
 function video_paths(slug: string) -> VideoPaths {
     let root = `videos/${slug}`;
@@ -41,6 +47,24 @@ function video_paths(slug: string) -> VideoPaths {
 
 function render_output(dir: string, take: string) -> string {
     `${dir}/renders/${take}.mp4`
+}
+
+// preview-cut is draft; production-cut is delivery.
+function resolve_cut(cut: string) -> CutSpec {
+    //# Allow only the two named cuts
+    match (cut) {
+        "preview" => CutSpec { quality: "draft", take: "preview-cut" },
+        "production" => CutSpec { quality: "delivery", take: "production-cut" },
+        _ => {
+            throw baml.errors.InvalidArgument {
+                message: "cut must be preview (draft, renders/preview-cut.mp4) or production (delivery, renders/production-cut.mp4)",
+            }
+        },
+    }
+}
+
+function cut_output(dir: string, cut: string) -> string {
+    render_output(dir, resolve_cut(cut).take)
 }
 
 function ensure_scaffold(dir: string) -> void {
@@ -106,7 +130,7 @@ function render_quality(name: string) -> string {
     }
 }
 
-// One take is one file: videos/<slug>/renders/<take>.mp4. Repeat for each render.
+// Extra take. The usual files come from render_cut.
 function render_take(dir: string, quality: string = "looks", take: string = "") -> string {
     let safe = assert_safe_dir(dir);
     let q = render_quality(quality);
@@ -125,4 +149,10 @@ function render_take(dir: string, quality: string = "looks", take: string = "") 
         throw baml.errors.Io { message: `hyperframes render failed: ${result.stderr.to_string()}${result.stdout.to_string()}` }
     }
     output
+}
+
+function render_cut(dir: string, cut: string) -> string {
+    //# Map the cut onto a HyperFrames quality and take
+    let spec = resolve_cut(cut);
+    render_take(dir, quality = spec.quality, take = spec.take)
 }
