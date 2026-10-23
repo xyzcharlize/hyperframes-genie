@@ -16,7 +16,6 @@ function main(
     plan_file: string = "",
     out: string = "",
     check: bool = false,
-    local_voice: string = "af_heart",
     still: string = "assets/avatar-still.png",
 ) -> string {
     let film = resolve_film(plan, plan_file);
@@ -25,6 +24,6 @@ function main(
     } else {
         out
     };
-    //# Write the composition, the local preview, and empty HeyGen stages
-    publish_video(dir, film, check = check, local_voice = local_voice, still = still)
+    //# Write the composition, the silent preview, and empty HeyGen stages
+    publish_video(dir, film, check = check, still = still)
 }

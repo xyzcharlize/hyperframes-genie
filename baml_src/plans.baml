@@ -1,4 +1,4 @@
-// One story, three stages: local preview, HeyGen voice, then lip-sync.
+// One story, three stages: silent preview, HeyGen voice, then lip-sync.
 
 class PreviewPlan {
     title: string,
@@ -6,10 +6,10 @@ class PreviewPlan {
     aspect: Aspect,
     palette: Palette,
     beats: Beat[],
-    script: string @description("words the local TTS voice speaks"),
+    script: string @description("words on screen; the preview does not speak them"),
     avatar: "still",
-    voice: "local-tts",
-    voice_id: string @description("Kokoro voice id, default af_heart"),
+    voice: "silent",
+    voice_id: string @description("empty; the preview has no voice"),
     still: string @description("still avatar path, relative to the video folder"),
 }
 
@@ -22,7 +22,7 @@ class VoicePlan {
     script: string @description("same words, now spoken by a HeyGen voice"),
     avatar: "still",
     voice: "heygen",
-    voice_id: string @description("HeyGen voice that replaces the local voice"),
+    voice_id: string @description("HeyGen voice added after the silent preview"),
     still: string,
 }
 
@@ -59,14 +59,6 @@ function narration_script(beats: Beat[]) -> string {
         .join(" ")
 }
 
-function local_voice_id(value: string) -> string {
-    if (baml.regex.new("^[a-z0-9_]+$").match_full(value) == null) {
-        "af_heart"
-    } else {
-        value
-    }
-}
-
 function still_path(value: string) -> string {
     let ok = baml.regex.new("^[A-Za-z0-9._/-]+$").match_full(value) != null;
     if (!ok || value == "" || value.includes("..") || value.starts_with("/")) {
@@ -85,7 +77,6 @@ function heygen_id(value: string, label: string) -> string {
 
 function preview_plan_from_film(
     film: Film,
-    voice_id: string = "af_heart",
     still: string = "assets/avatar-still.png",
 ) -> PreviewPlan {
     PreviewPlan {
@@ -96,8 +87,8 @@ function preview_plan_from_film(
         beats: film.beats,
         script: narration_script(film.beats),
         avatar: "still",
-        voice: "local-tts",
-        voice_id: local_voice_id(voice_id),
+        voice: "silent",
+        voice_id: "",
         still: still_path(still),
     }
 }
@@ -176,7 +167,7 @@ function voice_swap_block(review: StageReview?, script: string, voice_id: string
         return "The story changed after the preview review. Review it in Studio again.";
     }
     if (voice_id == "") {
-        return "Name the HeyGen voice_id. It replaces the local voice and is often not an avatar's default voice.";
+        return "Name the HeyGen voice_id. The preview is silent, and this voice is often not an avatar's default voice.";
     }
     null
 }

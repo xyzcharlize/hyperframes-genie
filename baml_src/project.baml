@@ -162,10 +162,9 @@ function publish_video(
     dir: string,
     film: Film,
     check: bool = false,
-    local_voice: string = "af_heart",
     still: string = "assets/avatar-still.png",
 ) -> string {
-    //# Preview is local. Voice and lip-sync start empty. A rewrite drops reviews.
+    //# Preview is silent. Voice and lip-sync start empty. A rewrite drops reviews.
     let safe = write_project(dir, film, check = check);
     baml.fs.mkdir(`${safe}/renders`, baml.fs.MkdirOptions { recursive: true });
     if (!baml.fs.exists(`${safe}/renders/.gitkeep`)) {
@@ -174,7 +173,7 @@ function publish_video(
     baml.fs.write(`${safe}/plan.json`, baml.json.to_string(plan_from_film(film)));
     baml.fs.write(
         `${safe}/preview-plan.json`,
-        baml.json.to_string(preview_plan_from_film(film, voice_id = local_voice, still = still)),
+        baml.json.to_string(preview_plan_from_film(film, still = still)),
     );
     baml.fs.write(
         `${safe}/voice-plan.json`,
@@ -257,7 +256,7 @@ function review_stage(
     if (stage == "voice") {
         let voice = baml.json.from_string<VoicePlan>(baml.fs.read(`${safe}/voice-plan.json`));
         if (voice.voice_id == "") {
-            throw baml.errors.InvalidArgument { message: "Swap the local voice to a HeyGen voice_id before this review." }
+            throw baml.errors.InvalidArgument { message: "Set a HeyGen voice_id before this review. The preview is silent." }
         }
         return write_reviews(
             safe,
@@ -284,7 +283,7 @@ function reject(dir: string, stage: string = "preview", note: string = "") -> st
 }
 
 function swap_voice(dir: string, voice_id: string) -> string {
-    //# Keep the still avatar. Replace only the local voice. Do not call HeyGen.
+    //# Keep the still avatar. Add the first voice, from HeyGen. Do not call HeyGen.
     let safe = assert_safe_dir(dir);
     let preview = baml.json.from_string<PreviewPlan>(baml.fs.read(`${safe}/preview-plan.json`));
     let block = voice_swap_block(read_reviews(safe).preview, preview.script, voice_id);

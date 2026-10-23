@@ -172,15 +172,15 @@ test "an unknown cut is rejected" {
     assert.equal(named, "cut must be preview, voice, or lipsync")
 }
 
-test "one story makes a local preview plan and a HeyGen production plan" {
+test "one story makes a silent preview plan and a HeyGen production plan" {
     let film = demo_film();
     let preview = preview_plan_from_film(film);
     let voice = empty_voice_plan(film);
     let lipsync = empty_lipsync_plan(film);
     let again = baml.json.from_string<PreviewPlan>(baml.json.to_string(preview));
     assert.equal(again.avatar, "still");
-    assert.equal(again.voice, "local-tts");
-    assert.equal(preview.voice_id, "af_heart");
+    assert.equal(again.voice, "silent");
+    assert.equal(preview.voice_id, "");
     assert.equal(voice.avatar, "still");
     assert.equal(voice.voice, "heygen");
     assert.equal(voice.voice_id, "");
@@ -225,7 +225,7 @@ test "production stays blocked until a person approves the same script" {
     assert.equal(rejected, "Voice swap is blocked because the preview was rejected.");
     assert.equal(
         unnamed,
-        "Name the HeyGen voice_id. It replaces the local voice and is often not an avatar's default voice.",
+        "Name the HeyGen voice_id. The preview is silent, and this voice is often not an avatar's default voice.",
     );
     assert.equal(voice_ok, null);
     assert.equal(swapped.avatar, "still");

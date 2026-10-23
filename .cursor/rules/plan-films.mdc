@@ -5,9 +5,9 @@ alwaysApply: true
 
 When asked for a video, write one `FilmPlan` story that matches `baml_src/film.baml` and run `baml run main -- --plan_file videos/<slug>/plan.json`. That writes three stages from the same story. Follow this order and stop at each Studio review:
 
-1. Preview cut, as it is now: still avatar and local Kokoro TTS. `baml run render_cut -- --dir videos/<slug> --cut preview` writes `renders/preview-cut.mp4` and opens HyperFrames Studio. Give the person the `studioUrl`.
+1. Preview cut, silent: still avatar and no voice. `baml run render_cut -- --dir videos/<slug> --cut preview` writes `renders/preview-cut.mp4` and opens HyperFrames Studio. Give the person the `studioUrl`.
 2. Wait for their review. Then `baml run approve -- --dir videos/<slug> --stage preview`, or `reject` if they say no.
-3. Swap only the voice from local to HeyGen: `baml run swap_voice -- --dir videos/<slug> --voice_id <heygen-voice>`. The avatar stays a still. The `voice_id` is often not an avatar's default voice. This does not call HeyGen.
+3. Add the HeyGen voice: `baml run swap_voice -- --dir videos/<slug> --voice_id <heygen-voice>`. The avatar stays a still. The preview had no voice. The `voice_id` is often not an avatar's default voice. This does not call HeyGen.
 4. Open Studio again: `baml run open_studio -- --dir videos/<slug> --cut voice`. Wait for that review, then `baml run approve -- --dir videos/<slug> --stage voice`.
 5. Add the HeyGen lip-sync avatar only after that voice review: `baml run add_lipsync -- --dir videos/<slug> --avatar_id <avatar>`. It keeps the reviewed `voice_id`. Do not start the paid lip-sync, do not call HeyGen, and do not ask for an API key.
 

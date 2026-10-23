@@ -50,7 +50,7 @@ function open_studio(dir: string, cut: string, port: int = 3002) -> string {
         let voice = baml.json.from_string<VoicePlan>(baml.fs.read(`${safe}/voice-plan.json`));
         if (voice.voice_id == "") {
             throw baml.errors.InvalidArgument {
-                message: "Swap the local voice to a HeyGen voice_id before this Studio review.",
+                message: "Set a HeyGen voice_id before this Studio review. The preview is silent.",
             }
         }
     } else {

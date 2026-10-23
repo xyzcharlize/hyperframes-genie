@@ -15,13 +15,13 @@ baml test
 baml run main
 ```
 
-Each video is one folder. One story moves through three stages. The preview cut is a still avatar and a local TTS voice. After a Studio review, the voice swaps to HeyGen and the avatar stays a still. After a second Studio review, the HeyGen lip-sync avatar is added, using that reviewed voice.
+Each video is one folder. One story moves through three stages. The preview cut is silent: a still avatar and no voice. After a Studio review, a HeyGen voice is added and the avatar stays a still. After a second Studio review, the HeyGen lip-sync avatar is added, using that reviewed voice.
 
 ```text
 videos/
   <slug>/
     plan.json                 # shared story
-    preview-plan.json         # still avatar, local TTS
+    preview-plan.json         # still avatar, silent
     voice-plan.json           # still avatar, HeyGen voice
     lipsync-plan.json         # HeyGen lip-sync, reviewed voice
     reviews.json              # Studio reviews, not committed
