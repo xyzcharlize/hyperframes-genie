@@ -18,8 +18,6 @@ function main(
     check: bool = false,
     local_voice: string = "af_heart",
     still: string = "assets/avatar-still.png",
-    avatar_id: string = "",
-    heygen_voice: string = "",
 ) -> string {
     let film = resolve_film(plan, plan_file);
     let dir = if (out == "") {
@@ -27,14 +25,6 @@ function main(
     } else {
         out
     };
-    //# Write the composition plus the preview and production plans
-    publish_video(
-        dir,
-        film,
-        check = check,
-        local_voice = local_voice,
-        still = still,
-        avatar_id = avatar_id,
-        heygen_voice = heygen_voice,
-    )
+    //# Write the composition, the local preview, and empty HeyGen stages
+    publish_video(dir, film, check = check, local_voice = local_voice, still = still)
 }

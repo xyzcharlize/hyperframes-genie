@@ -9,4 +9,5 @@ out/
 videos/*/renders/**
 !videos/*/renders/.gitkeep
 videos/*/approval.json
+videos/*/reviews.json
 videos/*/assets/heygen-request.json

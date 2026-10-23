@@ -1,4 +1,4 @@
-// Two video plans for one story. Preview stays local. Production is HeyGen.
+// One story, three stages: local preview, HeyGen voice, then lip-sync.
 
 class PreviewPlan {
     title: string,
@@ -13,7 +13,20 @@ class PreviewPlan {
     still: string @description("still avatar path, relative to the video folder"),
 }
 
-class ProductionPlan {
+class VoicePlan {
+    title: string,
+    slug: string,
+    aspect: Aspect,
+    palette: Palette,
+    beats: Beat[],
+    script: string @description("same words, now spoken by a HeyGen voice"),
+    avatar: "still",
+    voice: "heygen",
+    voice_id: string @description("HeyGen voice that replaces the local voice"),
+    still: string,
+}
+
+class LipsyncPlan {
     title: string,
     slug: string,
     aspect: Aspect,
@@ -22,14 +35,20 @@ class ProductionPlan {
     script: string @description("words the HeyGen avatar lip-syncs"),
     avatar: "heygen-lipsync",
     voice: "heygen",
-    avatar_id: string @description("HeyGen avatar id; empty until a person chooses one"),
-    voice_id: string @description("speaking voice; often not the avatar's default voice"),
+    avatar_id: string @description("HeyGen avatar id; empty until the voice has been reviewed"),
+    voice_id: string @description("the reviewed HeyGen voice, often not the avatar default"),
 }
 
-class Approval {
+class StageReview {
     status: "approved" | "rejected",
     note: string,
-    script: string @description("preview script a person reviewed"),
+    script: string,
+    voice_id: string,
+}
+
+class Reviews {
+    preview: StageReview?,
+    voice: StageReview?,
 }
 
 function narration_script(beats: Beat[]) -> string {
@@ -83,49 +102,107 @@ function preview_plan_from_film(
     }
 }
 
-function production_plan_from_film(
-    film: Film,
-    avatar_id: string = "",
-    voice_id: string = "",
-) -> ProductionPlan {
-    ProductionPlan {
-        title: film.title,
-        slug: film.slug,
-        aspect: aspect_for(film.width, film.height),
-        palette: film.palette,
-        beats: film.beats,
-        script: narration_script(film.beats),
-        avatar: "heygen-lipsync",
+function voice_plan_from_preview(preview: PreviewPlan, voice_id: string) -> VoicePlan {
+    VoicePlan {
+        title: preview.title,
+        slug: preview.slug,
+        aspect: preview.aspect,
+        palette: preview.palette,
+        beats: preview.beats,
+        script: preview.script,
+        avatar: "still",
         voice: "heygen",
-        avatar_id: heygen_id(avatar_id, "avatar_id"),
         voice_id: heygen_id(voice_id, "voice_id"),
+        still: preview.still,
     }
 }
 
-// Null when the paid lip-sync is allowed to be considered. It is still not started here.
-function production_block(approval: Approval?, plan: ProductionPlan) -> string? {
-    //# A person must approve the preview script before HeyGen
-    if (approval == null) {
-        return "Approve the preview before the HeyGen production cut.";
+function empty_voice_plan(film: Film, still: string = "assets/avatar-still.png") -> VoicePlan {
+    let preview = preview_plan_from_film(film, still = still);
+    VoicePlan {
+        title: preview.title,
+        slug: preview.slug,
+        aspect: preview.aspect,
+        palette: preview.palette,
+        beats: preview.beats,
+        script: preview.script,
+        avatar: "still",
+        voice: "heygen",
+        voice_id: "",
+        still: preview.still,
     }
-    if (approval.status != "approved") {
-        return "Production cut is blocked because the preview was rejected.";
+}
+
+function lipsync_plan_from_voice(voice: VoicePlan, avatar_id: string) -> LipsyncPlan {
+    LipsyncPlan {
+        title: voice.title,
+        slug: voice.slug,
+        aspect: voice.aspect,
+        palette: voice.palette,
+        beats: voice.beats,
+        script: voice.script,
+        avatar: "heygen-lipsync",
+        voice: "heygen",
+        avatar_id: heygen_id(avatar_id, "avatar_id"),
+        voice_id: voice.voice_id,
     }
-    if (approval.script != plan.script) {
-        return "The story changed after approval. Review the preview again.";
+}
+
+function empty_lipsync_plan(film: Film) -> LipsyncPlan {
+    let voice = empty_voice_plan(film);
+    LipsyncPlan {
+        title: voice.title,
+        slug: voice.slug,
+        aspect: voice.aspect,
+        palette: voice.palette,
+        beats: voice.beats,
+        script: voice.script,
+        avatar: "heygen-lipsync",
+        voice: "heygen",
+        avatar_id: "",
+        voice_id: "",
     }
-    if (plan.avatar_id == "") {
-        return "Production plan needs a HeyGen avatar_id.";
+}
+
+// The local preview must be approved in Studio before the voice changes.
+function voice_swap_block(review: StageReview?, script: string, voice_id: string) -> string? {
+    if (review == null) {
+        return "Review the preview in Studio before swapping the voice.";
     }
-    // Omitting voice_id would let HeyGen speak with the avatar's default voice.
-    if (plan.voice_id == "") {
-        return "Production plan needs a voice_id. The speaking voice is its own HeyGen id, often not the avatar's default.";
+    if (review.status != "approved") {
+        return "Voice swap is blocked because the preview was rejected.";
+    }
+    if (review.script != script) {
+        return "The story changed after the preview review. Review it in Studio again.";
+    }
+    if (voice_id == "") {
+        return "Name the HeyGen voice_id. It replaces the local voice and is often not an avatar's default voice.";
     }
     null
 }
 
-// Body for `heygen video create`. voice_id is always set, so the avatar default is not used. Nothing here sends it.
-function heygen_request(plan: ProductionPlan) -> string {
+// The HeyGen voice must be approved in Studio before the lip-sync avatar is added.
+function lipsync_block(review: StageReview?, plan: LipsyncPlan) -> string? {
+    if (review == null) {
+        return "Review the HeyGen voice in Studio before adding the lip-sync avatar.";
+    }
+    if (review.status != "approved") {
+        return "Lip-sync is blocked because the HeyGen voice was rejected.";
+    }
+    if (review.script != plan.script) {
+        return "The story changed after the voice review. Review it in Studio again.";
+    }
+    if (plan.voice_id == "" || plan.voice_id != review.voice_id) {
+        return "The lip-sync must use the HeyGen voice that was reviewed.";
+    }
+    if (plan.avatar_id == "") {
+        return "Name the HeyGen avatar_id. The speaking voice stays the reviewed voice_id.";
+    }
+    null
+}
+
+// Body for a later `heygen video create`. voice_id is the reviewed voice. Nothing here sends it.
+function heygen_request(plan: LipsyncPlan) -> string {
     let avatar = baml.json.to_string(plan.avatar_id);
     let voice = baml.json.to_string(plan.voice_id);
     let script = baml.json.to_string(plan.script);

@@ -35,15 +35,29 @@ function studio_from_output(stdout: string) -> string {
 }
 
 function open_studio(dir: string, cut: string, port: int = 3002) -> string {
-    //# The cut file must exist. Studio then edits that composition.
+    //# Preview needs its mp4. The voice review needs the swapped HeyGen voice_id.
     let safe = assert_safe_dir(dir);
     let spec = resolve_cut(cut);
     if (!baml.fs.exists(`${safe}/package.json`)) {
         throw baml.errors.InvalidArgument { message: `no HyperFrames project at ${safe}` }
     }
-    let mp4 = render_output(safe, spec.take);
-    if (!baml.fs.exists(mp4)) {
-        throw baml.errors.InvalidArgument { message: `Render ${spec.take} before opening Studio.` }
+    if (spec.quality == "lipsync") {
+        throw baml.errors.InvalidArgument {
+            message: "Review the HeyGen voice in Studio before adding the lip-sync avatar.",
+        }
+    }
+    if (spec.quality == "voice") {
+        let voice = baml.json.from_string<VoicePlan>(baml.fs.read(`${safe}/voice-plan.json`));
+        if (voice.voice_id == "") {
+            throw baml.errors.InvalidArgument {
+                message: "Swap the local voice to a HeyGen voice_id before this Studio review.",
+            }
+        }
+    } else {
+        let mp4 = render_output(safe, spec.take);
+        if (!baml.fs.exists(mp4)) {
+            throw baml.errors.InvalidArgument { message: `Render ${spec.take} before opening Studio.` }
+        }
     }
     let result = run_shell(
         `npx --yes hyperframes@0.8.188 preview --background --json --no-open --port ${port}`,

@@ -15,15 +15,16 @@ baml test
 baml run main
 ```
 
-Each video is one folder. One story becomes two video plans. The preview plan is a still avatar and a local TTS voice. The production plan is a HeyGen lip-sync of the same words. Its `voice_id` is the speaking voice, often not the avatar's default, and the cut stays blocked until a person approves the preview.
+Each video is one folder. One story moves through three stages. The preview cut is a still avatar and a local TTS voice. After a Studio review, the voice swaps to HeyGen and the avatar stays a still. After a second Studio review, the HeyGen lip-sync avatar is added, using that reviewed voice.
 
 ```text
 videos/
   <slug>/
     plan.json                 # shared story
     preview-plan.json         # still avatar, local TTS
-    production-plan.json      # HeyGen lip-sync
-    approval.json             # written by approve, not committed
+    voice-plan.json           # still avatar, HeyGen voice
+    lipsync-plan.json         # HeyGen lip-sync, reviewed voice
+    reviews.json              # Studio reviews, not committed
     index.html
     compositions/
     renders/
@@ -36,14 +37,15 @@ videos/
 baml run main -- --plan_file videos/ceramic-studio/plan.json --check true
 ```
 
-Render the preview cut, then Studio opens for fine adjustments. That render uses HyperFrames quality `draft`, writes `renders/preview-cut.mp4`, and returns the Studio URL `http://127.0.0.1:<port>/#project/<slug>`. It does not call HeyGen. `render_cut --cut production` refuses until `approval.json` approves the same script, and even then it does not start the paid lip-sync. Once `production-cut.mp4` exists, open Studio on that cut too. An extra composition take still goes through `render_take`.
+Render the preview cut first. That uses HyperFrames quality `draft`, writes `renders/preview-cut.mp4`, and opens Studio at `http://127.0.0.1:<port>/#project/<slug>`. Nothing in this sequence calls HeyGen. An extra composition take still goes through `render_take`.
 
 ```bash
 baml run render_cut -- --dir videos/hyperframes-genie --cut preview
-baml run open_studio -- --dir videos/hyperframes-genie --cut preview
-baml run open_studio -- --dir videos/hyperframes-genie --cut production
-baml run approve -- --dir videos/hyperframes-genie --note "ship the lip-sync"
-baml run reject -- --dir videos/hyperframes-genie --note "hold"
+baml run approve -- --dir videos/hyperframes-genie --stage preview
+baml run swap_voice -- --dir videos/hyperframes-genie --voice_id <heygen-voice>
+baml run open_studio -- --dir videos/hyperframes-genie --cut voice
+baml run approve -- --dir videos/hyperframes-genie --stage voice
+baml run add_lipsync -- --dir videos/hyperframes-genie --avatar_id <avatar>
 
 cd videos/hyperframes-genie
 npm run dev
