@@ -1,12 +1,23 @@
-// Entry point: a brief becomes a HyperFrames project on disk.
+// Entry point. Cursor writes the plan; this program only renders it.
 
-function main(brief: string = "", out: string = "", check: bool = false) -> string {
-    //# Plan from the brief, or use the built-in demo when it is empty
-    let film = if (brief == "") {
-        demo_film()
-    } else {
-        normalize(plan_film(brief))
-    };
+function resolve_film(plan: string, plan_file: string) -> Film {
+    //# A JSON plan from Cursor, or the built-in demo when both are empty
+    if (plan_file != "") {
+        return film_from_json(baml.fs.read(plan_file));
+    }
+    if (plan != "") {
+        return film_from_json(plan);
+    }
+    demo_film()
+}
+
+function main(
+    plan: string = "",
+    plan_file: string = "",
+    out: string = "",
+    check: bool = false,
+) -> string {
+    let film = resolve_film(plan, plan_file);
     let dir = if (out == "") {
         `videos/${film.slug}`
     } else {

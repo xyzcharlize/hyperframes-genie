@@ -1,8 +1,8 @@
 # hyperframes-genie
 
-BAML plans a short film. HyperFrames renders that plan to video.
+Cursor plans the film with the model on your subscription. BAML turns that plan into a HyperFrames project. No API key.
 
-The model returns a typed plan (scenes, copy, colors, timing). Ordinary BAML turns the plan into a HyperFrames project: `index.html` plus one composition per scene. An empty brief writes the built-in demo and does not call a model.
+The plan is a `FilmPlan` (`baml_src/film.baml`): scenes, copy, colors, and timing. Words on screen only, three or four scenes, each 3 to 5 seconds, total under 15 seconds. An empty run writes the built-in demo and does not ask a model for anything.
 
 ## Run
 
@@ -15,13 +15,13 @@ baml test
 baml run main
 ```
 
-`baml run main` writes `videos/hyperframes-genie`. Pass a brief to plan with Grok 4.7, the model included in Cursor (`XAI_API_KEY` must be set):
+`baml run main` writes `videos/hyperframes-genie`. To render a plan from Cursor, pass the JSON:
 
 ```bash
-baml run main -- --brief "A 12 second intro for a ceramic studio" --check true
+baml run main -- --plan_file plans/film.json --check true
 ```
 
-`--out` is a relative project path. `--check true` runs `npm run check` after writing.
+`--plan` accepts the same JSON inline. `--out` is a relative project path. `--check true` runs `npm run check` after writing.
 
 Preview and render from the video directory:
 

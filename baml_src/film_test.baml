@@ -122,10 +122,10 @@ test "copy is escaped and a saved plan parses" {
     assert.is_true(scene.includes("A &amp; B"));
     assert.is_true(scene.includes("Less &lt; than"));
     assert.is_true(scene.includes("Quote &quot;here&quot;."));
-    let parsed = PlanFilm@spec("brief").parse(
+    let parsed = film_from_json(
         "{\"title\":\"Ada\",\"slug\":\"ada\",\"aspect\":\"Landscape\",\"palette\":{\"ground\":\"#111111\",\"ink\":\"#ffffff\",\"accent\":\"#ffcc00\"},\"beats\":[{\"id\":\"open\",\"eyebrow\":\"One\",\"headline\":\"Hello\",\"body\":\"World enough.\",\"seconds\":4.0}]}",
     );
     assert.equal(parsed.title, "Ada");
-    assert.equal(parsed.aspect, Aspect.Landscape);
-    assert.equal(normalize(parsed).beats.at(0)?.headline ?? "", "Hello")
+    assert.equal(parsed.width, 1920);
+    assert.equal(parsed.beats.at(0)?.headline ?? "", "Hello")
 }

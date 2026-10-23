@@ -1,4 +1,4 @@
-// Film plan: the typed object the model fills and the renderer consumes.
+// Film plan: the Cursor agent fills this. Rendering does not call a model API.
 
 enum Aspect {
     Landscape,
@@ -13,19 +13,19 @@ class Palette {
 }
 
 class Beat {
-    id: string,
-    eyebrow: string,
-    headline: string,
-    body: string,
-    seconds: float,
+    id: string @description("unique kebab-case id"),
+    eyebrow: string @description("at most 4 words"),
+    headline: string @description("at most 8 words"),
+    body: string @description("one sentence, at most 18 words"),
+    seconds: float @description("scene length from 3 to 5"),
 }
 
 class FilmPlan {
     title: string,
-    slug: string,
-    aspect: Aspect,
-    palette: Palette,
-    beats: Beat[],
+    slug: string @description("kebab-case folder name"),
+    aspect: Aspect @description("Landscape unless the brief asks for vertical or square"),
+    palette: Palette @description("six-digit hex colors; ink must stay readable on ground"),
+    beats: Beat[] @description("3 or 4 scenes, total under 15 seconds"),
 }
 
 class Film {
@@ -172,6 +172,10 @@ function normalize(plan: FilmPlan) -> Film {
         palette: palette,
         beats: ready,
     }
+}
+
+function film_from_json(raw: string) -> Film {
+    normalize(baml.json.from_string<FilmPlan>(raw))
 }
 
 function demo_film() -> Film {
