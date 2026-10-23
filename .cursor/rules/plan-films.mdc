@@ -3,4 +3,4 @@ description: Plan HyperFrames films in this Cursor chat, then render with BAML
 alwaysApply: true
 ---
 
-When asked for a video, write a `FilmPlan` JSON that matches `baml_src/film.baml` and run `baml run main -- --plan_file <path>`. The subscription model in this chat is the planner. Do not call an external model API and do not ask for an API key.
+When asked for a video, write a `FilmPlan` JSON that matches `baml_src/film.baml` and run `baml run main -- --plan_file videos/<slug>/plan.json`. That creates `videos/<slug>/` with `plan.json`, the composition, and `renders/`. Put each render in `renders/<take>.mp4` via `baml run render_take -- --dir videos/<slug> --quality looks --take <take>`. The subscription model in this chat is the planner. Do not call an external model API and do not ask for an API key.

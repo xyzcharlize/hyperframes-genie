@@ -129,3 +129,20 @@ test "copy is escaped and a saved plan parses" {
     assert.equal(parsed.width, 1920);
     assert.equal(parsed.beats.at(0)?.headline ?? "", "Hello")
 }
+
+test "each video keeps its plan and its renders apart" {
+    let paths = video_paths("ceramic-studio");
+    assert.equal(paths.root, "videos/ceramic-studio");
+    assert.equal(paths.plan, "videos/ceramic-studio/plan.json");
+    assert.equal(paths.renders, "videos/ceramic-studio/renders");
+    assert.equal(render_output(paths.root, "draft"), "videos/ceramic-studio/renders/draft.mp4");
+    assert.equal(
+        render_output(paths.root, "delivery"),
+        "videos/ceramic-studio/renders/delivery.mp4",
+    );
+    let film = demo_film();
+    let plan = plan_from_film(film);
+    assert.equal(plan.slug, "hyperframes-genie");
+    assert.equal(plan.aspect, Aspect.Landscape);
+    assert.equal(plan.beats.length(), 3)
+}

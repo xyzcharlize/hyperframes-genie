@@ -15,21 +15,35 @@ baml test
 baml run main
 ```
 
-`baml run main` writes `videos/hyperframes-genie`. To render a plan from Cursor, pass the JSON:
+Each video is one folder. The plan and the composition sit at its root, and every render is a separate file under `renders/`:
 
-```bash
-baml run main -- --plan_file plans/film.json --check true
+```text
+videos/
+  <slug>/
+    plan.json
+    index.html
+    compositions/
+    renders/
+      draft.mp4
+      looks.mp4
+      delivery.mp4
 ```
 
-`--plan` accepts the same JSON inline. `--out` is a relative project path. `--check true` runs `npm run check` after writing.
-
-Preview and render from the video directory:
+`baml run main` writes `videos/hyperframes-genie`. To render a plan from Cursor, pass the JSON. `--plan` accepts the same JSON inline. `--out` is the video folder. `--check true` runs `npm run check` after writing.
 
 ```bash
+baml run main -- --plan_file videos/ceramic-studio/plan.json --check true
+```
+
+Render a named take so a second render does not replace the first. Preview from the video directory:
+
+```bash
+baml run render_take -- --dir videos/hyperframes-genie --quality draft --take draft
+baml run render_take -- --dir videos/hyperframes-genie --quality delivery --take delivery
+
 cd videos/hyperframes-genie
 npm run dev
 npm run check
-npm run render
 ```
 
-Agent skills for this repo live in `.agents/skills` (Cursor) and `.claude/skills` (Claude Code): `baml-core` plus the HyperFrames pack.
+Agent skills for this repo live in `.agents/skills`: `baml-core` plus the HyperFrames pack.

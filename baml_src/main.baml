@@ -19,10 +19,10 @@ function main(
 ) -> string {
     let film = resolve_film(plan, plan_file);
     let dir = if (out == "") {
-        `videos/${film.slug}`
+        video_paths(film.slug).root
     } else {
         out
     };
-    //# Write index.html and one composition per scene
-    write_project(dir, film, check = check)
+    //# Write the composition, plan.json, and renders/
+    publish_video(dir, film, check = check)
 }

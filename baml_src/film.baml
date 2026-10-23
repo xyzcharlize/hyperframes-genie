@@ -178,6 +178,27 @@ function film_from_json(raw: string) -> Film {
     normalize(baml.json.from_string<FilmPlan>(raw))
 }
 
+function aspect_for(width: int, height: int) -> Aspect {
+    if (width == height) {
+        Aspect.Square
+    } else if (height > width) {
+        Aspect.Portrait
+    } else {
+        Aspect.Landscape
+    }
+}
+
+// The plan saved next to a video, after ids and timing are repaired.
+function plan_from_film(film: Film) -> FilmPlan {
+    FilmPlan {
+        title: film.title,
+        slug: film.slug,
+        aspect: aspect_for(film.width, film.height),
+        palette: film.palette,
+        beats: film.beats,
+    }
+}
+
 function demo_film() -> Film {
     normalize(
         FilmPlan {
