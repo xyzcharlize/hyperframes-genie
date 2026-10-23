@@ -1,0 +1,76 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      background: var(--ground, #12141a);
+      color: var(--ink, #f4f1ea);
+      font-family: Inter, sans-serif;
+    }
+    #make-stage {
+      position: absolute;
+      inset: 10%;
+    }
+    #make-copy {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 28px;
+    }
+    #make-eyebrow {
+      margin: 0;
+      opacity: 0;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    #make-headline {
+      margin: 0;
+      max-width: 16ch;
+      font-size: 88px;
+      font-weight: 600;
+      letter-spacing: -0.035em;
+      line-height: 0.98;
+    }
+    #make-body {
+      margin: 0;
+      max-width: 28ch;
+      opacity: 0;
+      font-size: 32px;
+      font-weight: 400;
+      line-height: 1.35;
+    }
+    #make-rule {
+      width: 100%;
+      height: 8px;
+      background: var(--accent, #d6ff4a);
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="make"
+    data-width="1920"
+    data-height="1080"
+    data-composition-variables="[{&quot;id&quot;:&quot;eyebrow&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Eyebrow&quot;,&quot;default&quot;:&quot;Hyperframes&quot;},{&quot;id&quot;:&quot;headline&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Headline&quot;,&quot;default&quot;:&quot;HTML is the timeline&quot;},{&quot;id&quot;:&quot;body&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Body&quot;,&quot;default&quot;:&quot;Each scene is a paused composition the renderer can seek.&quot;},{&quot;id&quot;:&quot;ground&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Ground&quot;,&quot;default&quot;:&quot;#12141a&quot;},{&quot;id&quot;:&quot;ink&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Ink&quot;,&quot;default&quot;:&quot;#f4f1ea&quot;},{&quot;id&quot;:&quot;accent&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Accent&quot;,&quot;default&quot;:&quot;#d6ff4a&quot;}]"
+  >
+    <div id="make-stage" class="clip" data-start="0" data-duration="3.9" data-track-index="1">
+      <div id="make-copy">
+        <p id="make-eyebrow" data-var-text="eyebrow">Hyperframes</p>
+        <h1 id="make-headline" data-var-text="headline">HTML is the timeline</h1>
+        <p id="make-body" data-var-text="body">Each scene is a paused composition the renderer can seek.</p>
+        <div id="make-rule"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#make-headline", { y: 18 }, { y: 0, duration: 0.7, ease: "power4.out" }, 0);
+    tl.fromTo("#make-eyebrow", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.15);
+    tl.fromTo("#make-body", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.45);
+    tl.fromTo("#make-rule", { scaleX: 0 }, { scaleX: 1, duration: 3.2, ease: "power1.inOut", transformOrigin: "0% 50%" }, 0);
+    window.__timelines["make"] = tl;
+  </script>
+</template>
