@@ -15,7 +15,7 @@ baml test
 baml run main
 ```
 
-`baml run main` writes `videos/hyperframes-genie`. Pass a brief to plan with `gpt-4o-mini` (`OPENAI_API_KEY` must be set):
+`baml run main` writes `videos/hyperframes-genie`. Pass a brief to plan with Grok 4.7, the model included in Cursor (`XAI_API_KEY` must be set):
 
 ```bash
 baml run main -- --brief "A 12 second intro for a ceramic studio" --check true
