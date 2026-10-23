@@ -24,6 +24,6 @@ function main(
     } else {
         out
     };
-    //# Write the composition, the silent preview, and empty HeyGen stages
+    //# Write the composition and one silent plan.json
     publish_video(dir, film, check = check, still = still)
 }

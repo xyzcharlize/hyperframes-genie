@@ -47,8 +47,8 @@ function open_studio(dir: string, cut: string, port: int = 3002) -> string {
         }
     }
     if (spec.quality == "voice") {
-        let voice = baml.json.from_string<VoicePlan>(baml.fs.read(`${safe}/voice-plan.json`));
-        if (voice.voice_id == "") {
+        let plan = read_plan(safe);
+        if (plan.voice_id == "") {
             throw baml.errors.InvalidArgument {
                 message: "Set a HeyGen voice_id before this Studio review. The preview is silent.",
             }

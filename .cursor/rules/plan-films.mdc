@@ -3,7 +3,7 @@ description: Plan HyperFrames films in this Cursor chat, then render with BAML
 alwaysApply: true
 ---
 
-When asked for a video, write one `FilmPlan` story that matches `baml_src/film.baml` and run `baml run main -- --plan_file videos/<slug>/plan.json`. That writes three stages from the same story. Follow this order and stop at each Studio review:
+When asked for a video, write one `FilmPlan` story that matches `baml_src/film.baml` and run `baml run main -- --plan_file videos/<slug>/plan.json`. That writes one `plan.json`. `voice_id` and `avatar_id` stay empty until the Studio reviews below. Follow this order and stop at each Studio review:
 
 1. Preview cut, silent: still avatar and no voice. `baml run render_cut -- --dir videos/<slug> --cut preview` writes `renders/preview-cut.mp4` and opens HyperFrames Studio. Give the person the `studioUrl`.
 2. Wait for their review. Then `baml run approve -- --dir videos/<slug> --stage preview`, or `reject` if they say no.
