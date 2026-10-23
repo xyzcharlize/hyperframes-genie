@@ -4,6 +4,7 @@
 # HyperFrames local tooling and render products
 node_modules/
 .hyperframes/
+videos/*/.thumbnails/
 *.mp4
 out/
 videos/*/renders/**

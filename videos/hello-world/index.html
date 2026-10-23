@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Hello World Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #10140f;
+        font-family: Inter, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="12.0"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div
+  id="hello"
+  data-composition-id="hello"
+  data-composition-src="compositions/hello.html"
+  data-start="0.0"
+  data-duration="4.0"
+  data-track-index="1"
+  data-track-kind="graphics"
+  data-width="1920"
+  data-height="1080"
+  data-variable-values="{&quot;eyebrow&quot;:&quot;Hello&quot;,&quot;headline&quot;:&quot;Hello, world&quot;,&quot;body&quot;:&quot;This is the first film from the Hyperframes Genie board.&quot;,&quot;ground&quot;:&quot;#10140f&quot;,&quot;ink&quot;:&quot;#f3f7f1&quot;,&quot;accent&quot;:&quot;#3ddc84&quot;}"
+></div><div
+  id="preview"
+  data-composition-id="preview"
+  data-composition-src="compositions/preview.html"
+  data-start="4.0"
+  data-duration="4.0"
+  data-track-index="1"
+  data-track-kind="graphics"
+  data-width="1920"
+  data-height="1080"
+  data-variable-values="{&quot;eyebrow&quot;:&quot;Preview cut&quot;,&quot;headline&quot;:&quot;A still, and a local voice&quot;,&quot;body&quot;:&quot;Kokoro speaks while the avatar stays a still.&quot;,&quot;ground&quot;:&quot;#10140f&quot;,&quot;ink&quot;:&quot;#f3f7f1&quot;,&quot;accent&quot;:&quot;#3ddc84&quot;}"
+></div><div
+  id="review"
+  data-composition-id="review"
+  data-composition-src="compositions/review.html"
+  data-start="8.0"
+  data-duration="4.0"
+  data-track-index="1"
+  data-track-kind="graphics"
+  data-width="1920"
+  data-height="1080"
+  data-variable-values="{&quot;eyebrow&quot;:&quot;Studio&quot;,&quot;headline&quot;:&quot;Look it over&quot;,&quot;body&quot;:&quot;The next voice and the lip-sync wait on this review.&quot;,&quot;ground&quot;:&quot;#10140f&quot;,&quot;ink&quot;:&quot;#f3f7f1&quot;,&quot;accent&quot;:&quot;#3ddc84&quot;}"
+></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
