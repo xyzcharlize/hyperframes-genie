@@ -104,6 +104,14 @@ function ensure_scaffold(dir: string) -> void {
     }
 }
 
+// HyperFrames init writes this guide. This repo does not use it.
+function drop_claude_md(dir: string) -> void {
+    let path = `${dir}/CLAUDE.md`;
+    if (baml.fs.exists(path)) {
+        baml.fs.remove(path);
+    }
+}
+
 function write_files(dir: string, film: Film) -> void {
     baml.fs.mkdir(`${dir}/compositions`, baml.fs.MkdirOptions { recursive: true });
     let files = render_project(film);
@@ -127,6 +135,7 @@ function write_project(dir: string, film: Film, check: bool = false) -> string {
     //# Scaffold once, then replace the composition with the plan
     let safe = assert_safe_dir(dir);
     ensure_scaffold(safe);
+    drop_claude_md(safe);
     write_files(safe, film);
     if (check) {
         check_project(safe);
