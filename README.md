@@ -36,10 +36,12 @@ videos/
 baml run main -- --plan_file videos/ceramic-studio/plan.json --check true
 ```
 
-Render the preview cut and stop for review. That render uses HyperFrames quality `draft` and writes `renders/preview-cut.mp4`. It does not call HeyGen. `render_cut --cut production` refuses until `approval.json` approves the same script, and even then it does not start the paid lip-sync. An extra composition take still goes through `render_take`.
+Render the preview cut, then Studio opens for fine adjustments. That render uses HyperFrames quality `draft`, writes `renders/preview-cut.mp4`, and returns the Studio URL `http://127.0.0.1:<port>/#project/<slug>`. It does not call HeyGen. `render_cut --cut production` refuses until `approval.json` approves the same script, and even then it does not start the paid lip-sync. Once `production-cut.mp4` exists, open Studio on that cut too. An extra composition take still goes through `render_take`.
 
 ```bash
 baml run render_cut -- --dir videos/hyperframes-genie --cut preview
+baml run open_studio -- --dir videos/hyperframes-genie --cut preview
+baml run open_studio -- --dir videos/hyperframes-genie --cut production
 baml run approve -- --dir videos/hyperframes-genie --note "ship the lip-sync"
 baml run reject -- --dir videos/hyperframes-genie --note "hold"
 

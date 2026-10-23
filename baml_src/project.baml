@@ -254,5 +254,7 @@ function render_cut(dir: string, cut: string) -> string {
             message: "The preview is approved. Refusing to start the HeyGen lip-sync.",
         }
     }
-    render_take(safe, quality = spec.quality, take = spec.take)
+    //# Render the cut, then open Studio for fine adjustments.
+    render_take(safe, quality = spec.quality, take = spec.take);
+    open_studio(safe, cut)
 }

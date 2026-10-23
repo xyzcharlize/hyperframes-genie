@@ -15,4 +15,4 @@ videos/
       preview-cut.mp4     # draft composition for review
 ```
 
-Render the preview, then wait. Approving requires that preview file. Republishing the story deletes the approval, because the approved script no longer matches.
+Render the preview, then HyperFrames Studio opens on that project so a person can make fine adjustments. Approving requires the preview file. Once a production cut exists, Studio is the last step for that file too. Republishing the story deletes the approval, because the approved script no longer matches.
