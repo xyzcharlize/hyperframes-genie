@@ -233,14 +233,21 @@ test "production stays blocked until a person approves the same script" {
     assert.is_true(body.includes("\"voice_id\":\"voc1\""))
 }
 
+test "a run needs a plan file" {
+    let message = resolve_film("", "") catch (e) {
+        baml.errors.InvalidArgument => e.message,
+    };
+    assert.equal(message, "Pass --plan_file videos/<slug>/plan.json.")
+}
+
 test "studio opens on the project after a cut" {
-    assert.equal(studio_project("videos/hyperframes-genie"), "hyperframes-genie");
+    assert.equal(studio_project("videos/hello-world"), "hello-world");
     assert.equal(
         studio_url("videos/ceramic-studio", port = 3017),
         "http://127.0.0.1:3017/#project/ceramic-studio",
     );
     let url = studio_from_output(
-        "{\"schemaVersion\":1,\"operation\":\"start\",\"ok\":true,\"result\":{\"state\":\"started\",\"mode\":\"background\",\"projectName\":\"hyperframes-genie\",\"projectDir\":\"/workspace/videos/hyperframes-genie\",\"host\":\"127.0.0.1\",\"port\":3017,\"pid\":1,\"serverUrl\":\"http://127.0.0.1:3017\",\"studioUrl\":\"http://127.0.0.1:3017/#project/hyperframes-genie\",\"ready\":true}}",
+        "{\"schemaVersion\":1,\"operation\":\"start\",\"ok\":true,\"result\":{\"state\":\"started\",\"mode\":\"background\",\"projectName\":\"hello-world\",\"projectDir\":\"/workspace/videos/hello-world\",\"host\":\"127.0.0.1\",\"port\":3017,\"pid\":1,\"serverUrl\":\"http://127.0.0.1:3017\",\"studioUrl\":\"http://127.0.0.1:3017/#project/hello-world\",\"ready\":true}}",
     );
-    assert.equal(url, "http://127.0.0.1:3017/#project/hyperframes-genie")
+    assert.equal(url, "http://127.0.0.1:3017/#project/hello-world")
 }

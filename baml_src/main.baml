@@ -1,14 +1,14 @@
 // Entry point. Cursor writes the plan; this program only renders it.
 
 function resolve_film(plan: string, plan_file: string) -> Film {
-    //# A JSON plan from Cursor, or the built-in demo when both are empty
+    //# A JSON plan from Cursor. An empty run does not write a video.
     if (plan_file != "") {
         return film_from_json(baml.fs.read(plan_file));
     }
     if (plan != "") {
         return film_from_json(plan);
     }
-    demo_film()
+    throw baml.errors.InvalidArgument { message: "Pass --plan_file videos/<slug>/plan.json." }
 }
 
 function main(
