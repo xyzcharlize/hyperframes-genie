@@ -137,14 +137,20 @@ test "each video keeps its plan and its two cuts" {
     assert.equal(paths.root, "videos/ceramic-studio");
     assert.equal(paths.plan, "videos/ceramic-studio/plan.json");
     assert.equal(paths.renders, "videos/ceramic-studio/renders");
+    assert.equal(paths.preview_plan, "videos/ceramic-studio/preview-plan.json");
+    assert.equal(paths.production_plan, "videos/ceramic-studio/production-plan.json");
+    assert.equal(paths.approval, "videos/ceramic-studio/approval.json");
     assert.equal(preview.quality, "draft");
     assert.equal(preview.take, "preview-cut");
+    assert.equal(preview.plan_file, "preview-plan.json");
+    assert.equal(preview.needs_approval, false);
     assert.equal(render_quality(preview.quality), "draft");
     assert.equal(safe_id(preview.take), "preview-cut");
     assert.equal(cut_output(paths.root, "preview"), "videos/ceramic-studio/renders/preview-cut.mp4");
-    assert.equal(production.quality, "delivery");
+    assert.equal(production.quality, "heygen");
     assert.equal(production.take, "production-cut");
-    assert.equal(render_quality(production.quality), "delivery");
+    assert.equal(production.plan_file, "production-plan.json");
+    assert.equal(production.needs_approval, true);
     assert.equal(safe_id(production.take), "production-cut");
     assert.equal(
         cut_output(paths.root, "production"),
@@ -167,10 +173,62 @@ test "an unknown cut is rejected" {
     };
     assert.equal(
         looks,
-        "cut must be preview (draft, renders/preview-cut.mp4) or production (delivery, renders/production-cut.mp4)",
+        "cut must be preview (still avatar, local TTS) or production (HeyGen lip-sync after approval)",
     );
     assert.equal(
         named,
-        "cut must be preview (draft, renders/preview-cut.mp4) or production (delivery, renders/production-cut.mp4)",
+        "cut must be preview (still avatar, local TTS) or production (HeyGen lip-sync after approval)",
     )
+}
+
+test "one story makes a local preview plan and a HeyGen production plan" {
+    let film = demo_film();
+    let preview = preview_plan_from_film(film);
+    let production = production_plan_from_film(film);
+    let again = baml.json.from_string<PreviewPlan>(baml.json.to_string(preview));
+    assert.equal(again.avatar, "still");
+    assert.equal(again.voice, "local-tts");
+    assert.equal(preview.voice_id, "af_heart");
+    assert.equal(preview.still, "assets/avatar-still.png");
+    assert.equal(preview_plan_from_film(film, voice_id = "Nope").voice_id, "af_heart");
+    assert.equal(production.avatar, "heygen-lipsync");
+    assert.equal(production.voice, "heygen");
+    assert.equal(production.avatar_id, "");
+    assert.equal(production.voice_id, "");
+    assert.equal(preview.script, production.script);
+    assert.equal(preview.script, narration_script(film.beats));
+    assert.equal(preview.slug, production.slug);
+    assert.equal(preview.beats.length(), production.beats.length());
+    let bad = production_plan_from_film(film, avatar_id = "a b", voice_id = "ok") catch (e) {
+        baml.errors.InvalidArgument => e.message,
+    };
+    assert.equal(bad, "avatar_id must be a HeyGen id")
+}
+
+test "production stays blocked until a person approves the same script" {
+    let plan = production_plan_from_film(demo_film());
+    let missing = production_block(null, plan) ?? "";
+    let rejected = production_block(Approval { status: "rejected", note: "no", script: plan.script }, plan) ?? "";
+    let stale = production_block(Approval { status: "approved", note: "", script: "other words" }, plan) ?? "";
+    let unnamed = production_block(Approval { status: "approved", note: "ok", script: plan.script }, plan) ?? "";
+    let avatar_only = production_plan_from_film(demo_film(), avatar_id = "ava1");
+    let no_voice = production_block(Approval { status: "approved", note: "ok", script: avatar_only.script }, avatar_only)
+        ?? "";
+    let ready_plan = production_plan_from_film(demo_film(), avatar_id = "ava1", voice_id = "voc1");
+    let ready = production_block(Approval { status: "approved", note: "ok", script: ready_plan.script }, ready_plan);
+    let body = heygen_request(ready_plan);
+    assert.equal(missing, "Approve the preview before the HeyGen production cut.");
+    assert.equal(rejected, "Production cut is blocked because the preview was rejected.");
+    assert.equal(stale, "The story changed after approval. Review the preview again.");
+    assert.equal(unnamed, "Production plan needs a HeyGen avatar_id.");
+    assert.equal(
+        no_voice,
+        "Production plan needs a voice_id. The speaking voice is its own HeyGen id, often not the avatar's default.",
+    );
+    assert.equal(ready_plan.avatar_id, "ava1");
+    assert.equal(ready_plan.voice_id, "voc1");
+    assert.equal(ready, null);
+    assert.is_true(body.includes("\"type\":\"avatar\""));
+    assert.is_true(body.includes("\"avatar_id\":\"ava1\""));
+    assert.is_true(body.includes("\"voice_id\":\"voc1\""))
 }

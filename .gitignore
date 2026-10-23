@@ -8,3 +8,5 @@ node_modules/
 out/
 videos/*/renders/**
 !videos/*/renders/.gitkeep
+videos/*/approval.json
+videos/*/assets/heygen-request.json

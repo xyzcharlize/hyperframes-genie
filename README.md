@@ -15,17 +15,19 @@ baml test
 baml run main
 ```
 
-Each video is one folder. The plan and the composition sit at its root. Render the preview-cut first and the production-cut second. Those two files sit under `renders/`:
+Each video is one folder. One story becomes two video plans. The preview plan is a still avatar and a local TTS voice. The production plan is a HeyGen lip-sync of the same words. Its `voice_id` is the speaking voice, often not the avatar's default, and the cut stays blocked until a person approves the preview.
 
 ```text
 videos/
   <slug>/
-    plan.json
+    plan.json                 # shared story
+    preview-plan.json         # still avatar, local TTS
+    production-plan.json      # HeyGen lip-sync
+    approval.json             # written by approve, not committed
     index.html
     compositions/
     renders/
       preview-cut.mp4
-      production-cut.mp4
 ```
 
 `baml run main` writes `videos/hyperframes-genie`. To render a plan from Cursor, pass the JSON. `--plan` accepts the same JSON inline. `--out` is the video folder. `--check true` runs `npm run check` after writing.
@@ -34,12 +36,12 @@ videos/
 baml run main -- --plan_file videos/ceramic-studio/plan.json --check true
 ```
 
-Render the preview-cut first, then the production-cut. Preview-cut uses HyperFrames quality `draft` and writes `renders/preview-cut.mp4`. Production-cut uses quality `delivery` and writes `renders/production-cut.mp4`. An extra take still goes through `render_take`. Preview the composition from the video directory:
+Render the preview cut and stop for review. That render uses HyperFrames quality `draft` and writes `renders/preview-cut.mp4`. It does not call HeyGen. `render_cut --cut production` refuses until `approval.json` approves the same script, and even then it does not start the paid lip-sync. An extra composition take still goes through `render_take`.
 
 ```bash
 baml run render_cut -- --dir videos/hyperframes-genie --cut preview
-baml run render_cut -- --dir videos/hyperframes-genie --cut production
-baml run render_take -- --dir videos/hyperframes-genie --quality looks --take looks
+baml run approve -- --dir videos/hyperframes-genie --note "ship the lip-sync"
+baml run reject -- --dir videos/hyperframes-genie --note "hold"
 
 cd videos/hyperframes-genie
 npm run dev

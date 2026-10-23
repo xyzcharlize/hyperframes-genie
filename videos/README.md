@@ -1,16 +1,18 @@
 # videos
 
-One folder per video. Render the preview-cut first and the production-cut second. The two files sit side by side and do not overwrite each other.
+One folder per video. One story is saved twice: a preview plan and a production plan. They share the words. The avatar and the voice do not.
 
 ```text
 videos/
   <slug>/
-    plan.json             # FilmPlan used to build the composition
-    index.html            # HyperFrames root
-    compositions/         # one file per scene
+    plan.json              # FilmPlan story
+    preview-plan.json      # still avatar, local Kokoro TTS
+    production-plan.json   # HeyGen lip-sync; voice_id is often not the avatar default
+    approval.json          # a person's review; not committed
+    index.html
+    compositions/
     renders/
-      preview-cut.mp4     # HyperFrames quality draft
-      production-cut.mp4  # HyperFrames quality delivery
+      preview-cut.mp4     # draft composition for review
 ```
 
-`preview` is HyperFrames quality `draft`. `production` is quality `delivery`. An extra take from `render_take` is another file in the same `renders/` directory.
+Render the preview, then wait. Approving requires that preview file. Republishing the story deletes the approval, because the approved script no longer matches.
