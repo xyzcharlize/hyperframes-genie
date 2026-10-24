@@ -240,6 +240,33 @@ test "a run needs a plan file" {
     assert.equal(message, "Pass --plan_file videos/<slug>/plan.json.")
 }
 
+test "card status matches the Hyperframes Genie options" {
+    assert.equal(card_status("publish"), "Preview cut");
+    assert.equal(card_status("preview_studio"), "Studio review");
+    assert.equal(card_status("preview_approved"), "HeyGen voice");
+    assert.equal(card_status("preview_rejected"), "Rework");
+    assert.equal(card_status("voice_set"), "HeyGen voice");
+    assert.equal(card_status("voice_studio"), "Voice review");
+    assert.equal(card_status("voice_approved"), "Lip-sync avatar");
+    assert.equal(card_status("voice_rejected"), "Rework");
+    assert.equal(card_status("lipsync_set"), "Done");
+    let preview = card_write("preview_studio", "hello-world", "http://127.0.0.1:3002/#project/hello-world", "", "");
+    let body = notion_properties_body(preview);
+    assert.is_true(body.includes("\"name\":\"Studio review\""));
+    assert.is_true(body.includes("\"Lastest Studio Link\""));
+    assert.is_true(body.includes("videos/hello-world/renders/preview-cut.mp4"));
+    assert.equal(body.includes("Voice_id"), false);
+    let done = notion_properties_body(card_write("lipsync_set", "hello-world", "", "voc1", "ava1"));
+    assert.is_true(done.includes("\"name\":\"Done\""));
+    assert.is_true(done.includes("voc1"));
+    assert.is_true(done.includes("ava1"));
+    let ids = notion_page_ids(
+        "{\"object\":\"list\",\"results\":[{\"object\":\"page\",\"id\":\"40253252-ac26-800d-94db-de47508ddeaa\"}],\"has_more\":false}",
+    );
+    assert.equal(ids.length(), 1);
+    assert.equal(ids.at(0) ?? "", "40253252-ac26-800d-94db-de47508ddeaa")
+}
+
 test "studio opens on the project after a cut" {
     assert.equal(studio_project("videos/hello-world"), "hello-world");
     assert.equal(

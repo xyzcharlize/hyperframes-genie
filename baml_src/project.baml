@@ -179,6 +179,7 @@ function publish_video(
     let _ = write_plan(safe, video_plan_from_film(film, still = still));
     drop_if_present(`${safe}/reviews.json`);
     drop_if_present(`${safe}/approval.json`);
+    let _ = sync_card(safe, "publish");
     safe
 }
 
@@ -241,20 +242,27 @@ function review_stage(
             throw baml.errors.InvalidArgument { message: "Render the preview cut and review it in Studio first." }
         }
         let plan = read_plan(safe);
-        return write_reviews(
+        let path = write_reviews(
             safe,
             Reviews {
                 preview: StageReview { status: status, note: note, script: plan.script, voice_id: "" },
                 voice: null,
             },
         );
+        let step = if (status == "approved") {
+            "preview_approved"
+        } else {
+            "preview_rejected"
+        };
+        let _ = sync_card(safe, step);
+        return path;
     }
     if (stage == "voice") {
         let plan = read_plan(safe);
         if (plan.voice_id == "") {
             throw baml.errors.InvalidArgument { message: "Set a HeyGen voice_id before this review. The preview is silent." }
         }
-        return write_reviews(
+        let path = write_reviews(
             safe,
             Reviews {
                 preview: reviews.preview,
@@ -266,6 +274,13 @@ function review_stage(
                 },
             },
         );
+        let step = if (status == "approved") {
+            "voice_approved"
+        } else {
+            "voice_rejected"
+        };
+        let _ = sync_card(safe, step);
+        return path;
     }
     throw baml.errors.InvalidArgument { message: "stage must be preview or voice" }
 }
@@ -288,7 +303,8 @@ function swap_voice(dir: string, voice_id: string) -> string {
     }
     let path = write_plan(safe, with_voice(plan, voice_id));
     let reviews = read_reviews(safe);
-    write_reviews(safe, Reviews { preview: reviews.preview, voice: null });
+    let _ = write_reviews(safe, Reviews { preview: reviews.preview, voice: null });
+    let _ = sync_card(safe, "voice_set");
     path
 }
 
@@ -300,7 +316,9 @@ function add_lipsync(dir: string, avatar_id: string) -> string {
     if (block != null) {
         throw baml.errors.InvalidArgument { message: block }
     }
-    write_plan(safe, plan)
+    let path = write_plan(safe, plan);
+    let _ = sync_card(safe, "lipsync_set");
+    path
 }
 
 function render_cut(dir: string, cut: string) -> string {

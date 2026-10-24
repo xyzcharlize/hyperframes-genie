@@ -36,6 +36,8 @@ baml run main -- --plan_file videos/hello-world/plan.json --check true
 
 Render the preview cut first. That uses HyperFrames quality `draft`, writes `renders/preview-cut.mp4`, and opens Studio at `http://127.0.0.1:<port>/#project/<slug>`. Nothing in this sequence calls HeyGen. An extra composition take still goes through `render_take`.
 
+Each command sets the Hyperframes Genie `Status` for that slug. Publishing sets `Preview cut`. The silent Studio handoff sets `Studio review`. Approving it sets `HeyGen voice`. Opening Studio for the voice sets `Voice review`. Approving that sets `Lip-sync avatar`. Saving the avatar id sets `Done`. A rejection sets `Rework`. `NOTION_TOKEN` writes the card from the command.
+
 ```bash
 baml run render_cut -- --dir videos/hello-world --cut preview
 baml run approve -- --dir videos/hello-world --stage preview

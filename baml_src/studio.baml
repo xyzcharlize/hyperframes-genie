@@ -69,5 +69,12 @@ function open_studio(dir: string, cut: string, port: int = 3002) -> string {
             message: `HyperFrames Studio failed: ${result.stderr.to_string()}${result.stdout.to_string()}`,
         }
     }
-    studio_from_output(result.stdout.to_string())
+    let url = studio_from_output(result.stdout.to_string());
+    let step = if (spec.quality == "voice") {
+        "voice_studio"
+    } else {
+        "preview_studio"
+    };
+    let _ = sync_card(safe, step, studio_url = url);
+    url
 }
