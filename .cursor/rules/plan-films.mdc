@@ -5,7 +5,7 @@ alwaysApply: true
 
 When asked for a video, write one `FilmPlan` story that matches `baml_src/film.baml` and run `baml run main -- --plan_file videos/<slug>/plan.json`. That writes one `plan.json`. `voice_id` and `avatar_id` stay empty until the Studio reviews below. Follow this order and stop at each review.
 
-Studio lists composition files by filename, in alphabetical order. Keep the beats in the same order as the Notion `Scene_id` column, starting at 1. The publisher names each file `compositions/<Scene_id>-<id>.html`, so the compositions panel shows `1-hello` before `2-pipeline`. Leave the beat id as a word. A CSS selector cannot start with a digit.
+Studio lists composition files by filename, in alphabetical order. Keep the beats in the same order as the Notion `Scene_id` column, starting at 1. The publisher zero-pads that number to the width of the scene count, then names each file `compositions/<Scene_id>-<id>.html`. A ten-scene film uses `01` through `10`. A hundred-scene film uses `001` through `100`. A four-scene film stays `1-hello` before `2-pipeline`. Leave the beat id as a word. A CSS selector cannot start with a digit.
 
 The card is the Hyperframes Genie row whose `Slug` is the video folder. Each command below sets `Status` to one of these options. `Preview cut`, `Studio review`, `HeyGen voice`, `Voice review`, `Lip-sync avatar`, `Done`, `Rework`. With `NOTION_TOKEN` or `NOTION_API_KEY` set, the command writes that option. Set the same option on the card before you stop.
 

@@ -71,6 +71,37 @@ function safe_id(raw: string) -> string {
     }
 }
 
+// Width of the decimal text. 9 is 1, 10 is 2, 100 is 3.
+function decimal_digits(n: int) -> int {
+    let digits = 1;
+    let span = 10;
+    while (n >= span && digits < 6) {
+        digits = digits + 1;
+        span = span * 10;
+    }
+    digits
+}
+
+function zeros(n: int) -> string {
+    if (n <= 0) {
+        ""
+    } else if (n == 1) {
+        "0"
+    } else if (n == 2) {
+        "00"
+    } else if (n == 3) {
+        "000"
+    } else if (n == 4) {
+        "0000"
+    } else {
+        "00000"
+    }
+}
+
+function pad_number(number: int, digits: int) -> string {
+    `${zeros(digits - decimal_digits(number))}${number}`
+}
+
 function clamp_seconds(n: float) -> float {
     if (!n.is_finite() || n < 3.0) {
         3.0

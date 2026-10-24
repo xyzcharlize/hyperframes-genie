@@ -112,9 +112,25 @@ function write_files(dir: string, film: Film) -> void {
         let body = files.get(path) ?? "";
         baml.fs.write(`${dir}/${path}`, body);
     }
-    // The numbered file replaces the old name. Studio would otherwise list both.
+    // Studio lists every html name. A narrower pad would sort beside the new file.
+    drop_scene_aliases(dir, film);
+}
+
+function drop_scene_aliases(dir: string, film: Film) -> void {
+    let digits = decimal_digits(film.beats.length());
+    let number = 1;
     for (let beat in film.beats) {
         drop_if_present(`${dir}/compositions/${beat.id}.html`);
+        let places = 1;
+        while (places <= 6) {
+            let alias = pad_number(number, places);
+            let canonical = pad_number(number, digits);
+            if (alias != canonical) {
+                drop_if_present(`${dir}/compositions/${alias}-${beat.id}.html`);
+            }
+            places = places + 1;
+        }
+        number = number + 1;
     }
 }
 
