@@ -34,7 +34,7 @@ function studio_from_output(stdout: string) -> string {
     launch.result.studioUrl
 }
 
-function open_studio(dir: string, cut: string, port: int = 3002) -> string {
+function open_studio_work(dir: string, cut: string, port: int) -> string {
     //# Preview needs its mp4. The voice review needs the swapped HeyGen voice_id.
     let safe = assert_safe_dir(dir);
     let spec = resolve_cut(cut);

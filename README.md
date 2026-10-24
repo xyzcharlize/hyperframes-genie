@@ -17,10 +17,13 @@ baml run main -- --plan_file videos/hello-world/plan.json
 
 Each video is one folder and one `plan.json`. The preview cut is silent: a still avatar and no voice. After a Studio review, that same file gains a HeyGen `voice_id` and the avatar stays a still. After a second Studio review, it gains the HeyGen `avatar_id` and keeps that reviewed voice.
 
+Each of those commands records a BAML span for the film slug and appends the stage to `videos/<slug>/trace.json`. Publish, the preview render, both Studio opens, both reviews, the voice swap, the lip-sync id, and the Notion card write are the stages. `baml run film_trace -- --slug <slug>` rewrites that file from the recordings, including timings, inputs, and errors. The raw recordings stay in `.baml/` on the machine that ran the command.
+
 ```text
 videos/
   <slug>/
     plan.json                 # story, silent until voice_id and avatar_id are set
+    trace.json                # stage path for this film
     reviews.json              # Studio reviews, not committed
     index.html
     compositions/

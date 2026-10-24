@@ -180,7 +180,7 @@ function write_plan(dir: string, plan: VideoPlan) -> string {
     path
 }
 
-function publish_video(
+function publish_video_work(
     dir: string,
     film: Film,
     check: bool = false,
@@ -301,15 +301,15 @@ function review_stage(
     throw baml.errors.InvalidArgument { message: "stage must be preview or voice" }
 }
 
-function approve(dir: string, stage: string = "preview", note: string = "") -> string {
+function approve_work(dir: string, stage: string, note: string) -> string {
     review_stage(dir, stage, "approved", note)
 }
 
-function reject(dir: string, stage: string = "preview", note: string = "") -> string {
+function reject_work(dir: string, stage: string, note: string) -> string {
     review_stage(dir, stage, "rejected", note)
 }
 
-function swap_voice(dir: string, voice_id: string) -> string {
+function swap_voice_work(dir: string, voice_id: string) -> string {
     //# Keep the still avatar. Add the first voice, from HeyGen. Do not call HeyGen.
     let safe = assert_safe_dir(dir);
     let plan = read_plan(safe);
@@ -324,7 +324,7 @@ function swap_voice(dir: string, voice_id: string) -> string {
     path
 }
 
-function add_lipsync(dir: string, avatar_id: string) -> string {
+function add_lipsync_work(dir: string, avatar_id: string) -> string {
     //# Attach the avatar to the reviewed voice. Do not start the paid render.
     let safe = assert_safe_dir(dir);
     let plan = with_avatar(read_plan(safe), avatar_id);
@@ -337,7 +337,7 @@ function add_lipsync(dir: string, avatar_id: string) -> string {
     path
 }
 
-function render_cut(dir: string, cut: string) -> string {
+function render_cut_work(dir: string, cut: string) -> string {
     //# Only the preview cut renders. Later stages do not call HeyGen.
     let spec = resolve_cut(cut);
     let safe = assert_safe_dir(dir);

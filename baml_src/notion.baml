@@ -146,7 +146,7 @@ function notion_request(method: string, url: string, token: string, body: string
     text
 }
 
-function sync_card(dir: string, step: string, studio_url: string = "") -> string {
+function sync_card_work(dir: string, step: string, studio_url: string) -> string {
     let plan = read_plan(dir);
     let write = card_write(step, plan.slug, studio_url, plan.voice_id, plan.avatar_id);
     let token = notion_token();

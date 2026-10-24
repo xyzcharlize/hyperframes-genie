@@ -16,3 +16,5 @@ The card is the Hyperframes Genie row whose `Slug` is the video folder. Each com
 5. Add the HeyGen lip-sync avatar only after that voice review: `baml run add_lipsync -- --dir videos/<slug> --avatar_id <avatar>`. It keeps the reviewed `voice_id`. `Avatar_id` is saved on the card. `Status` becomes `Done`. Do not start the paid lip-sync, do not call HeyGen, and do not ask for an API key.
 
 Republishing the story deletes `reviews.json` and sets `Status` back to `Preview cut`. The subscription model in this chat is the planner.
+
+Each command above records its stage on `videos/<slug>/trace.json`. After the command finishes, run `baml run film_trace -- --slug <slug>` and commit that file with the cut. It is the path from the plan to delivery: timings, inputs, outputs, and errors. The raw BAML recordings stay in `.baml/` on the machine that ran the command.
