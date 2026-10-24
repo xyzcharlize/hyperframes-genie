@@ -267,6 +267,49 @@ test "card status matches the Hyperframes Genie options" {
     assert.equal(ids.at(0) ?? "", "40253252-ac26-800d-94db-de47508ddeaa")
 }
 
+function many_scenes(count: int) -> Film {
+    let beats: Beat[] = [];
+    let n = 0;
+    while (n < count) {
+        n = n + 1;
+        beats.push(
+            Beat {
+                id: `s${n}`,
+                eyebrow: "Scene",
+                headline: "Scene",
+                body: "A scene.",
+                seconds: 3.0,
+            },
+        );
+    }
+    Film {
+        title: "Long",
+        slug: "long",
+        width: 1920,
+        height: 1080,
+        palette: Palette { ground: "#101010", ink: "#f5f5f5", accent: "#3ddc84" },
+        beats: beats,
+    }
+}
+
+test "scene filenames stay in order past nine" {
+    let ten = render_project(many_scenes(10));
+    let ten_index = ten.get("index.html") ?? "";
+    assert.is_true(ten_index.includes("data-composition-src=\"compositions/01-s1.html\""));
+    assert.is_true(ten_index.includes("data-composition-src=\"compositions/02-s2.html\""));
+    assert.is_true(ten_index.includes("data-composition-src=\"compositions/09-s9.html\""));
+    assert.is_true(ten_index.includes("data-composition-src=\"compositions/10-s10.html\""));
+    assert.equal(ten.get("compositions/2-s2.html") ?? "", "");
+    let hundred = render_project(many_scenes(100));
+    let hundred_index = hundred.get("index.html") ?? "";
+    assert.is_true(hundred_index.includes("data-composition-src=\"compositions/002-s2.html\""));
+    assert.is_true(hundred_index.includes("data-composition-src=\"compositions/010-s10.html\""));
+    assert.is_true(hundred_index.includes("data-composition-src=\"compositions/099-s99.html\""));
+    assert.is_true(hundred_index.includes("data-composition-src=\"compositions/100-s100.html\""));
+    assert.equal(hundred.get("compositions/2-s2.html") ?? "", "");
+    assert.equal(hundred.get("compositions/10-s10.html") ?? "", "");
+}
+
 test "studio opens on the project after a cut" {
     assert.equal(studio_project("videos/hello-world"), "hello-world");
     assert.equal(

@@ -293,8 +293,8 @@ function scene_html(beat: Beat, palette: Palette, width: int, height: int) -> st
     }
 }
 
-function scene_src(number: int, id: string) -> string {
-    `compositions/${number}-${id}.html`
+function scene_src(number: int, id: string, digits: int) -> string {
+    `compositions/${pad_number(number, digits)}-${id}.html`
 }
 
 function scene_host(
@@ -304,11 +304,12 @@ function scene_host(
     width: int,
     height: int,
     number: int,
+    digits: int,
 ) -> string {
     let slot = format_tenths(to_tenths(beat.seconds));
     let begin = format_tenths(start);
     let values = variable_values(beat, palette);
-    let src = scene_src(number, beat.id);
+    let src = scene_src(number, beat.id, digits);
     `
         <div
           id="${beat.id}"
@@ -330,8 +331,9 @@ function index_html(film: Film) -> string {
     let hosts: string[] = [];
     let cursor = 0;
     let number = 1;
+    let digits = decimal_digits(film.beats.length());
     for (let beat in film.beats) {
-        hosts.push(scene_host(beat, film.palette, cursor, film.width, film.height, number));
+        hosts.push(scene_host(beat, film.palette, cursor, film.width, film.height, number, digits));
         cursor = cursor + to_tenths(beat.seconds);
         number = number + 1;
     }
@@ -381,9 +383,10 @@ function render_project(film: Film) -> map<string, string> {
     let files: map<string, string> = {};
     let _index = files.set("index.html", index_html(film));
     let number = 1;
+    let digits = decimal_digits(film.beats.length());
     for (let beat in film.beats) {
         let _file = files.set(
-            scene_src(number, beat.id),
+            scene_src(number, beat.id, digits),
             scene_html(beat, film.palette, film.width, film.height),
         );
         number = number + 1;
