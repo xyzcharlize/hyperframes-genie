@@ -1,5 +1,5 @@
 {
-  "title": "Hello World Test",
+  "title": "Hello World",
   "slug": "hello-world",
   "aspect": "Landscape",
   "palette": {
@@ -32,7 +32,7 @@
     {
       "id": "bye",
       "eyebrow": "Bye",
-      "headline": "Thanks, and bye",
+      "headline": "Thanks and bye",
       "body": "Thanks for watching.",
       "seconds": 3.5
     }
