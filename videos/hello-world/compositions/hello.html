@@ -56,7 +56,7 @@
     data-height="1080"
     data-composition-variables="[{&quot;id&quot;:&quot;eyebrow&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Eyebrow&quot;,&quot;default&quot;:&quot;Hello&quot;},{&quot;id&quot;:&quot;headline&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Headline&quot;,&quot;default&quot;:&quot;Hello, world&quot;},{&quot;id&quot;:&quot;body&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Body&quot;,&quot;default&quot;:&quot;This is the first film from the Hyperframes Genie board.&quot;},{&quot;id&quot;:&quot;ground&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Ground&quot;,&quot;default&quot;:&quot;#10140f&quot;},{&quot;id&quot;:&quot;ink&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Ink&quot;,&quot;default&quot;:&quot;#f3f7f1&quot;},{&quot;id&quot;:&quot;accent&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Accent&quot;,&quot;default&quot;:&quot;#3ddc84&quot;}]"
   >
-    <div id="hello-stage" class="clip" data-start="0" data-duration="3.9" data-track-index="1">
+    <div id="hello-stage" class="clip" data-start="0" data-duration="3.4" data-track-index="1">
       <div id="hello-copy">
         <p id="hello-eyebrow" data-var-text="eyebrow">Hello</p>
         <h1 id="hello-headline" data-var-text="headline">Hello, world</h1>
@@ -70,7 +70,7 @@
     tl.fromTo("#hello-headline", { y: 18 }, { y: 0, duration: 0.7, ease: "power4.out" }, 0);
     tl.fromTo("#hello-eyebrow", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.15);
     tl.fromTo("#hello-body", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.45);
-    tl.fromTo("#hello-rule", { scaleX: 0 }, { scaleX: 1, duration: 3.2, ease: "power1.inOut", transformOrigin: "0% 50%" }, 0);
+    tl.fromTo("#hello-rule", { scaleX: 0 }, { scaleX: 1, duration: 2.7, ease: "power1.inOut", transformOrigin: "0% 50%" }, 0);
     window.__timelines["hello"] = tl;
   </script>
 </template>
