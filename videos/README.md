@@ -6,6 +6,7 @@ One folder per video. One `plan.json`. Studio is the review between the silent p
 videos/
   <slug>/
     plan.json            # story; voice_id and avatar_id start empty
+    trace.json           # the stage path that produced this film
     reviews.json         # preview review, then voice review; not committed
     index.html
     compositions/
