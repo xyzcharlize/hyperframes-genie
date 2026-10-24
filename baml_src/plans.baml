@@ -1,4 +1,4 @@
-// One plan.json per video. voice_id, then avatar_id, fill in after each Studio review.
+// One plan.json per video. The preview is silent. voice_id, then avatar_id, fill in after each Studio review.
 
 class VideoPlan {
     title: string,
@@ -6,11 +6,12 @@ class VideoPlan {
     aspect: Aspect,
     palette: Palette,
     beats: Beat[],
-    script: string @description("words spoken at every stage"),
+    script: string @description("words on screen; the preview does not speak them"),
     still: string @description("still avatar path, relative to the video folder"),
-    local_voice_id: string @description("Kokoro voice id for the preview, default af_heart"),
-    voice_id: string @description("HeyGen voice, empty until the preview is reviewed"),
-    avatar_id: string @description("HeyGen lip-sync avatar, empty until the voice is reviewed"),
+    voice_id: string @description("empty while the preview is silent; HeyGen voice after that review"),
+    avatar_id: string @description(
+        "empty while the avatar is a still; HeyGen lip-sync avatar after the voice review",
+    ),
 }
 
 class StageReview {
@@ -33,14 +34,6 @@ function narration_script(beats: Beat[]) -> string {
         .join(" ")
 }
 
-function safe_local_voice(value: string) -> string {
-    if (baml.regex.new("^[a-z0-9_]+$").match_full(value) == null) {
-        "af_heart"
-    } else {
-        value
-    }
-}
-
 function still_path(value: string) -> string {
     let ok = baml.regex.new("^[A-Za-z0-9._/-]+$").match_full(value) != null;
     if (!ok || value == "" || value.includes("..") || value.starts_with("/")) {
@@ -57,11 +50,7 @@ function heygen_id(value: string, label: string) -> string {
     value
 }
 
-function video_plan_from_film(
-    film: Film,
-    local_voice: string = "af_heart",
-    still: string = "assets/avatar-still.png",
-) -> VideoPlan {
+function video_plan_from_film(film: Film, still: string = "assets/avatar-still.png") -> VideoPlan {
     VideoPlan {
         title: film.title,
         slug: film.slug,
@@ -70,7 +59,6 @@ function video_plan_from_film(
         beats: film.beats,
         script: narration_script(film.beats),
         still: still_path(still),
-        local_voice_id: safe_local_voice(local_voice),
         voice_id: "",
         avatar_id: "",
     }
@@ -85,7 +73,7 @@ function with_avatar(plan: VideoPlan, avatar_id: string) -> VideoPlan {
     VideoPlan { ...plan, avatar_id: heygen_id(avatar_id, "avatar_id") }
 }
 
-// The local preview must be approved in Studio before the voice changes.
+// The silent preview must be approved in Studio before the voice is added.
 function voice_swap_block(review: StageReview?, script: string, voice_id: string) -> string? {
     if (review == null) {
         return "Review the preview in Studio before swapping the voice.";
@@ -97,7 +85,7 @@ function voice_swap_block(review: StageReview?, script: string, voice_id: string
         return "The story changed after the preview review. Review it in Studio again.";
     }
     if (voice_id == "") {
-        return "Name the HeyGen voice_id. It replaces the local voice and is often not an avatar's default voice.";
+        return "Name the HeyGen voice_id. The preview is silent, and this voice is often not an avatar's default voice.";
     }
     null
 }

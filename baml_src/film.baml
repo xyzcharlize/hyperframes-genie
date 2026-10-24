@@ -199,6 +199,7 @@ function plan_from_film(film: Film) -> FilmPlan {
     }
 }
 
+// In-memory fixture for tests. It does not write videos/hyperframes-genie.
 function demo_film() -> Film {
     normalize(
         FilmPlan {

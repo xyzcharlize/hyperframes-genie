@@ -1,4 +1,4 @@
-// Write a Film to disk. One plan.json, then the local preview cut.
+// Write a Film to disk. One plan.json, then the silent preview cut.
 
 function assert_safe_dir(dir: string) -> string {
     let ok = baml.regex.new("^[A-Za-z0-9._/-]+$").match_full(dir) != null;
@@ -112,6 +112,10 @@ function write_files(dir: string, film: Film) -> void {
         let body = files.get(path) ?? "";
         baml.fs.write(`${dir}/${path}`, body);
     }
+    // The numbered file replaces the old name. Studio would otherwise list both.
+    for (let beat in film.beats) {
+        drop_if_present(`${dir}/compositions/${beat.id}.html`);
+    }
 }
 
 function check_project(dir: string) -> string {
@@ -164,18 +168,18 @@ function publish_video(
     dir: string,
     film: Film,
     check: bool = false,
-    local_voice: string = "af_heart",
     still: string = "assets/avatar-still.png",
 ) -> string {
-    //# One plan. HeyGen ids start empty. A rewrite drops reviews and old stage files.
+    //# One silent plan. HeyGen ids start empty. A rewrite drops reviews and old stage files.
     let safe = write_project(dir, film, check = check);
     baml.fs.mkdir(`${safe}/renders`, baml.fs.MkdirOptions { recursive: true });
     if (!baml.fs.exists(`${safe}/renders/.gitkeep`)) {
         baml.fs.write(`${safe}/renders/.gitkeep`, "");
     }
-    let _ = write_plan(safe, video_plan_from_film(film, local_voice = local_voice, still = still));
+    let _ = write_plan(safe, video_plan_from_film(film, still = still));
     drop_if_present(`${safe}/reviews.json`);
     drop_if_present(`${safe}/approval.json`);
+    let _ = sync_card(safe, "publish");
     safe
 }
 
@@ -238,20 +242,27 @@ function review_stage(
             throw baml.errors.InvalidArgument { message: "Render the preview cut and review it in Studio first." }
         }
         let plan = read_plan(safe);
-        return write_reviews(
+        let path = write_reviews(
             safe,
             Reviews {
                 preview: StageReview { status: status, note: note, script: plan.script, voice_id: "" },
                 voice: null,
             },
         );
+        let step = if (status == "approved") {
+            "preview_approved"
+        } else {
+            "preview_rejected"
+        };
+        let _ = sync_card(safe, step);
+        return path;
     }
     if (stage == "voice") {
         let plan = read_plan(safe);
         if (plan.voice_id == "") {
-            throw baml.errors.InvalidArgument { message: "Swap the local voice to a HeyGen voice_id before this review." }
+            throw baml.errors.InvalidArgument { message: "Set a HeyGen voice_id before this review. The preview is silent." }
         }
-        return write_reviews(
+        let path = write_reviews(
             safe,
             Reviews {
                 preview: reviews.preview,
@@ -263,6 +274,13 @@ function review_stage(
                 },
             },
         );
+        let step = if (status == "approved") {
+            "voice_approved"
+        } else {
+            "voice_rejected"
+        };
+        let _ = sync_card(safe, step);
+        return path;
     }
     throw baml.errors.InvalidArgument { message: "stage must be preview or voice" }
 }
@@ -276,7 +294,7 @@ function reject(dir: string, stage: string = "preview", note: string = "") -> st
 }
 
 function swap_voice(dir: string, voice_id: string) -> string {
-    //# Keep the still avatar. Replace only the local voice. Do not call HeyGen.
+    //# Keep the still avatar. Add the first voice, from HeyGen. Do not call HeyGen.
     let safe = assert_safe_dir(dir);
     let plan = read_plan(safe);
     let block = voice_swap_block(read_reviews(safe).preview, plan.script, voice_id);
@@ -285,7 +303,8 @@ function swap_voice(dir: string, voice_id: string) -> string {
     }
     let path = write_plan(safe, with_voice(plan, voice_id));
     let reviews = read_reviews(safe);
-    write_reviews(safe, Reviews { preview: reviews.preview, voice: null });
+    let _ = write_reviews(safe, Reviews { preview: reviews.preview, voice: null });
+    let _ = sync_card(safe, "voice_set");
     path
 }
 
@@ -297,7 +316,9 @@ function add_lipsync(dir: string, avatar_id: string) -> string {
     if (block != null) {
         throw baml.errors.InvalidArgument { message: block }
     }
-    write_plan(safe, plan)
+    let path = write_plan(safe, plan);
+    let _ = sync_card(safe, "lipsync_set");
+    path
 }
 
 function render_cut(dir: string, cut: string) -> string {

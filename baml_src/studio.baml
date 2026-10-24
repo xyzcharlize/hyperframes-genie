@@ -50,7 +50,7 @@ function open_studio(dir: string, cut: string, port: int = 3002) -> string {
         let plan = read_plan(safe);
         if (plan.voice_id == "") {
             throw baml.errors.InvalidArgument {
-                message: "Swap the local voice to a HeyGen voice_id before this Studio review.",
+                message: "Set a HeyGen voice_id before this Studio review. The preview is silent.",
             }
         }
     } else {
@@ -69,5 +69,12 @@ function open_studio(dir: string, cut: string, port: int = 3002) -> string {
             message: `HyperFrames Studio failed: ${result.stderr.to_string()}${result.stdout.to_string()}`,
         }
     }
-    studio_from_output(result.stdout.to_string())
+    let url = studio_from_output(result.stdout.to_string());
+    let step = if (spec.quality == "voice") {
+        "voice_studio"
+    } else {
+        "preview_studio"
+    };
+    let _ = sync_card(safe, step, studio_url = url);
+    url
 }

@@ -81,13 +81,13 @@ test "demo project is a seekable HyperFrames film" {
     let film = demo_film();
     let files = render_project(film);
     let index = files.get("index.html") ?? "";
-    let open = files.get("compositions/open.html") ?? "";
+    let open = files.get("compositions/1-open.html") ?? "";
     assert.equal(sum_seconds(film.beats), 12.0);
     assert.is_true(index.includes("data-composition-id=\"main\""));
     assert.is_true(index.includes("data-duration=\"12.0\""));
-    assert.is_true(index.includes("data-composition-src=\"compositions/open.html\""));
-    assert.is_true(index.includes("data-composition-src=\"compositions/make.html\""));
-    assert.is_true(index.includes("data-composition-src=\"compositions/render.html\""));
+    assert.is_true(index.includes("data-composition-src=\"compositions/1-open.html\""));
+    assert.is_true(index.includes("data-composition-src=\"compositions/2-make.html\""));
+    assert.is_true(index.includes("data-composition-src=\"compositions/3-render.html\""));
     assert.is_true(index.includes("data-start=\"4.0\""));
     assert.is_true(index.includes("data-start=\"8.0\""));
     assert.is_true(open.includes("<template>"));
@@ -118,7 +118,7 @@ test "copy is escaped and a saved plan parses" {
             ],
         },
     );
-    let scene = render_project(film).get("compositions/marks.html") ?? "";
+    let scene = render_project(film).get("compositions/1-marks.html") ?? "";
     assert.is_true(scene.includes("A &amp; B"));
     assert.is_true(scene.includes("Less &lt; than"));
     assert.is_true(scene.includes("Quote &quot;here&quot;."));
@@ -170,16 +170,17 @@ test "an unknown cut is rejected" {
     assert.equal(named, "cut must be preview, voice, or lipsync")
 }
 
-test "one plan starts with a local voice and empty HeyGen ids" {
+test "one story makes a silent preview plan and a HeyGen production plan" {
     let film = demo_film();
     let plan = video_plan_from_film(film);
     let again = baml.json.from_string<VideoPlan>(baml.json.to_string(plan));
-    assert.equal(again.local_voice_id, "af_heart");
+    let reread = film_from_json(baml.json.to_string(plan));
     assert.equal(again.still, "assets/avatar-still.png");
     assert.equal(again.voice_id, "");
     assert.equal(again.avatar_id, "");
     assert.equal(again.script, narration_script(film.beats));
-    assert.equal(again.title, plan.title)
+    assert.equal(reread.slug, film.slug);
+    assert.equal(reread.beats.length(), film.beats.length())
 }
 
 test "production stays blocked until a person approves the same script" {
@@ -204,8 +205,8 @@ test "production stays blocked until a person approves the same script" {
         plan.script,
         "voc1",
     );
-    let no_voice_review = lipsync_block(null, with_avatar(swapped, "ava1")) ?? "";
     let ready_plan = with_avatar(swapped, "ava1");
+    let no_voice_review = lipsync_block(null, ready_plan) ?? "";
     let ready = lipsync_block(
         StageReview { status: "approved", note: "ok", script: swapped.script, voice_id: "voc1" },
         ready_plan,
@@ -215,10 +216,9 @@ test "production stays blocked until a person approves the same script" {
     assert.equal(rejected, "Voice swap is blocked because the preview was rejected.");
     assert.equal(
         unnamed,
-        "Name the HeyGen voice_id. It replaces the local voice and is often not an avatar's default voice.",
+        "Name the HeyGen voice_id. The preview is silent, and this voice is often not an avatar's default voice.",
     );
     assert.equal(voice_ok, null);
-    assert.equal(swapped.local_voice_id, "af_heart");
     assert.equal(swapped.voice_id, "voc1");
     assert.equal(swapped.avatar_id, "");
     assert.equal(
@@ -233,14 +233,48 @@ test "production stays blocked until a person approves the same script" {
     assert.is_true(body.includes("\"voice_id\":\"voc1\""))
 }
 
+test "a run needs a plan file" {
+    let message = resolve_film("", "") catch (e) {
+        baml.errors.InvalidArgument => e.message,
+    };
+    assert.equal(message, "Pass --plan_file videos/<slug>/plan.json.")
+}
+
+test "card status matches the Hyperframes Genie options" {
+    assert.equal(card_status("publish"), "Preview cut");
+    assert.equal(card_status("preview_studio"), "Studio review");
+    assert.equal(card_status("preview_approved"), "HeyGen voice");
+    assert.equal(card_status("preview_rejected"), "Rework");
+    assert.equal(card_status("voice_set"), "HeyGen voice");
+    assert.equal(card_status("voice_studio"), "Voice review");
+    assert.equal(card_status("voice_approved"), "Lip-sync avatar");
+    assert.equal(card_status("voice_rejected"), "Rework");
+    assert.equal(card_status("lipsync_set"), "Done");
+    let preview = card_write("preview_studio", "hello-world", "http://127.0.0.1:3002/#project/hello-world", "", "");
+    let body = notion_properties_body(preview);
+    assert.is_true(body.includes("\"name\":\"Studio review\""));
+    assert.is_true(body.includes("\"Lastest Studio Link\""));
+    assert.is_true(body.includes("videos/hello-world/renders/preview-cut.mp4"));
+    assert.equal(body.includes("Voice_id"), false);
+    let done = notion_properties_body(card_write("lipsync_set", "hello-world", "", "voc1", "ava1"));
+    assert.is_true(done.includes("\"name\":\"Done\""));
+    assert.is_true(done.includes("voc1"));
+    assert.is_true(done.includes("ava1"));
+    let ids = notion_page_ids(
+        "{\"object\":\"list\",\"results\":[{\"object\":\"page\",\"id\":\"40253252-ac26-800d-94db-de47508ddeaa\"}],\"has_more\":false}",
+    );
+    assert.equal(ids.length(), 1);
+    assert.equal(ids.at(0) ?? "", "40253252-ac26-800d-94db-de47508ddeaa")
+}
+
 test "studio opens on the project after a cut" {
-    assert.equal(studio_project("videos/hyperframes-genie"), "hyperframes-genie");
+    assert.equal(studio_project("videos/hello-world"), "hello-world");
     assert.equal(
         studio_url("videos/ceramic-studio", port = 3017),
         "http://127.0.0.1:3017/#project/ceramic-studio",
     );
     let url = studio_from_output(
-        "{\"schemaVersion\":1,\"operation\":\"start\",\"ok\":true,\"result\":{\"state\":\"started\",\"mode\":\"background\",\"projectName\":\"hyperframes-genie\",\"projectDir\":\"/workspace/videos/hyperframes-genie\",\"host\":\"127.0.0.1\",\"port\":3017,\"pid\":1,\"serverUrl\":\"http://127.0.0.1:3017\",\"studioUrl\":\"http://127.0.0.1:3017/#project/hyperframes-genie\",\"ready\":true}}",
+        "{\"schemaVersion\":1,\"operation\":\"start\",\"ok\":true,\"result\":{\"state\":\"started\",\"mode\":\"background\",\"projectName\":\"hello-world\",\"projectDir\":\"/workspace/videos/hello-world\",\"host\":\"127.0.0.1\",\"port\":3017,\"pid\":1,\"serverUrl\":\"http://127.0.0.1:3017\",\"studioUrl\":\"http://127.0.0.1:3017/#project/hello-world\",\"ready\":true}}",
     );
-    assert.equal(url, "http://127.0.0.1:3017/#project/hyperframes-genie")
+    assert.equal(url, "http://127.0.0.1:3017/#project/hello-world")
 }
