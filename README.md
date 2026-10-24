@@ -12,7 +12,7 @@ Install the BAML CLI once (`curl -fsSL https://pkg.boundaryml.com/install.sh | s
 export PATH="$HOME/.baml/bin:$PATH"
 
 baml test
-baml run main -- --plan_file videos/hello-world/plan.json
+baml run main -- --plan_file videos/<slug>/plan.json
 ```
 
 Each video is one folder and one `plan.json`. The preview cut is silent: a still avatar and no voice. After a Studio review, that same file gains a HeyGen `voice_id` and the avatar stays a still. After a second Studio review, it gains the HeyGen `avatar_id` and keeps that reviewed voice.
@@ -28,10 +28,10 @@ videos/
       preview-cut.mp4
 ```
 
-`baml run main` writes the folder named by the plan's slug. Hello World is `videos/hello-world`. `--plan` accepts the same JSON inline. `--out` is the video folder. `--check true` runs `npm run check` after writing.
+`baml run main` writes the folder named by the plan's slug, `videos/<slug>`. `--plan` accepts the same JSON inline. `--out` is the video folder. `--check true` runs `npm run check` after writing.
 
 ```bash
-baml run main -- --plan_file videos/hello-world/plan.json --check true
+baml run main -- --plan_file videos/<slug>/plan.json --check true
 ```
 
 Render the preview cut first. That uses HyperFrames quality `draft`, writes `renders/preview-cut.mp4`, and opens Studio at `http://127.0.0.1:<port>/#project/<slug>`. Nothing in this sequence calls HeyGen. An extra composition take still goes through `render_take`.
@@ -39,14 +39,14 @@ Render the preview cut first. That uses HyperFrames quality `draft`, writes `ren
 Each command sets the Hyperframes Genie `Status` for that slug. Publishing sets `Preview cut`. The silent Studio handoff sets `Studio review`. Approving it sets `HeyGen voice`. Opening Studio for the voice sets `Voice review`. Approving that sets `Lip-sync avatar`. Saving the avatar id sets `Done`. A rejection sets `Rework`. `NOTION_TOKEN` writes the card from the command.
 
 ```bash
-baml run render_cut -- --dir videos/hello-world --cut preview
-baml run approve -- --dir videos/hello-world --stage preview
-baml run swap_voice -- --dir videos/hello-world --voice_id <heygen-voice>
-baml run open_studio -- --dir videos/hello-world --cut voice
-baml run approve -- --dir videos/hello-world --stage voice
-baml run add_lipsync -- --dir videos/hello-world --avatar_id <avatar>
+baml run render_cut -- --dir videos/<slug> --cut preview
+baml run approve -- --dir videos/<slug> --stage preview
+baml run swap_voice -- --dir videos/<slug> --voice_id <heygen-voice>
+baml run open_studio -- --dir videos/<slug> --cut voice
+baml run approve -- --dir videos/<slug> --stage voice
+baml run add_lipsync -- --dir videos/<slug> --avatar_id <avatar>
 
-cd videos/hello-world
+cd videos/<slug>
 npm run dev
 npm run check
 ```
