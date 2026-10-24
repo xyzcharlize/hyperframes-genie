@@ -1,42 +1,17 @@
-// One story, three stages: local preview, HeyGen voice, then lip-sync.
+// One plan.json per video. The preview is silent. voice_id, then avatar_id, fill in after each Studio review.
 
-class PreviewPlan {
+class VideoPlan {
     title: string,
     slug: string,
     aspect: Aspect,
     palette: Palette,
     beats: Beat[],
-    script: string @description("words the local TTS voice speaks"),
-    avatar: "still",
-    voice: "local-tts",
-    voice_id: string @description("Kokoro voice id, default af_heart"),
+    script: string @description("words on screen; the preview does not speak them"),
     still: string @description("still avatar path, relative to the video folder"),
-}
-
-class VoicePlan {
-    title: string,
-    slug: string,
-    aspect: Aspect,
-    palette: Palette,
-    beats: Beat[],
-    script: string @description("same words, now spoken by a HeyGen voice"),
-    avatar: "still",
-    voice: "heygen",
-    voice_id: string @description("HeyGen voice that replaces the local voice"),
-    still: string,
-}
-
-class LipsyncPlan {
-    title: string,
-    slug: string,
-    aspect: Aspect,
-    palette: Palette,
-    beats: Beat[],
-    script: string @description("words the HeyGen avatar lip-syncs"),
-    avatar: "heygen-lipsync",
-    voice: "heygen",
-    avatar_id: string @description("HeyGen avatar id; empty until the voice has been reviewed"),
-    voice_id: string @description("the reviewed HeyGen voice, often not the avatar default"),
+    voice_id: string @description("empty while the preview is silent; HeyGen voice after that review"),
+    avatar_id: string @description(
+        "empty while the avatar is a still; HeyGen lip-sync avatar after the voice review",
+    ),
 }
 
 class StageReview {
@@ -59,14 +34,6 @@ function narration_script(beats: Beat[]) -> string {
         .join(" ")
 }
 
-function local_voice_id(value: string) -> string {
-    if (baml.regex.new("^[a-z0-9_]+$").match_full(value) == null) {
-        "af_heart"
-    } else {
-        value
-    }
-}
-
 function still_path(value: string) -> string {
     let ok = baml.regex.new("^[A-Za-z0-9._/-]+$").match_full(value) != null;
     if (!ok || value == "" || value.includes("..") || value.starts_with("/")) {
@@ -83,88 +50,30 @@ function heygen_id(value: string, label: string) -> string {
     value
 }
 
-function preview_plan_from_film(
-    film: Film,
-    voice_id: string = "af_heart",
-    still: string = "assets/avatar-still.png",
-) -> PreviewPlan {
-    PreviewPlan {
+function video_plan_from_film(film: Film, still: string = "assets/avatar-still.png") -> VideoPlan {
+    VideoPlan {
         title: film.title,
         slug: film.slug,
         aspect: aspect_for(film.width, film.height),
         palette: film.palette,
         beats: film.beats,
         script: narration_script(film.beats),
-        avatar: "still",
-        voice: "local-tts",
-        voice_id: local_voice_id(voice_id),
         still: still_path(still),
-    }
-}
-
-function voice_plan_from_preview(preview: PreviewPlan, voice_id: string) -> VoicePlan {
-    VoicePlan {
-        title: preview.title,
-        slug: preview.slug,
-        aspect: preview.aspect,
-        palette: preview.palette,
-        beats: preview.beats,
-        script: preview.script,
-        avatar: "still",
-        voice: "heygen",
-        voice_id: heygen_id(voice_id, "voice_id"),
-        still: preview.still,
-    }
-}
-
-function empty_voice_plan(film: Film, still: string = "assets/avatar-still.png") -> VoicePlan {
-    let preview = preview_plan_from_film(film, still = still);
-    VoicePlan {
-        title: preview.title,
-        slug: preview.slug,
-        aspect: preview.aspect,
-        palette: preview.palette,
-        beats: preview.beats,
-        script: preview.script,
-        avatar: "still",
-        voice: "heygen",
         voice_id: "",
-        still: preview.still,
-    }
-}
-
-function lipsync_plan_from_voice(voice: VoicePlan, avatar_id: string) -> LipsyncPlan {
-    LipsyncPlan {
-        title: voice.title,
-        slug: voice.slug,
-        aspect: voice.aspect,
-        palette: voice.palette,
-        beats: voice.beats,
-        script: voice.script,
-        avatar: "heygen-lipsync",
-        voice: "heygen",
-        avatar_id: heygen_id(avatar_id, "avatar_id"),
-        voice_id: voice.voice_id,
-    }
-}
-
-function empty_lipsync_plan(film: Film) -> LipsyncPlan {
-    let voice = empty_voice_plan(film);
-    LipsyncPlan {
-        title: voice.title,
-        slug: voice.slug,
-        aspect: voice.aspect,
-        palette: voice.palette,
-        beats: voice.beats,
-        script: voice.script,
-        avatar: "heygen-lipsync",
-        voice: "heygen",
         avatar_id: "",
-        voice_id: "",
     }
 }
 
-// The local preview must be approved in Studio before the voice changes.
+// Keep the still. Record the HeyGen voice and clear any earlier avatar choice.
+function with_voice(plan: VideoPlan, voice_id: string) -> VideoPlan {
+    VideoPlan { ...plan, voice_id: heygen_id(voice_id, "voice_id"), avatar_id: "" }
+}
+
+function with_avatar(plan: VideoPlan, avatar_id: string) -> VideoPlan {
+    VideoPlan { ...plan, avatar_id: heygen_id(avatar_id, "avatar_id") }
+}
+
+// The silent preview must be approved in Studio before the voice is added.
 function voice_swap_block(review: StageReview?, script: string, voice_id: string) -> string? {
     if (review == null) {
         return "Review the preview in Studio before swapping the voice.";
@@ -176,13 +85,13 @@ function voice_swap_block(review: StageReview?, script: string, voice_id: string
         return "The story changed after the preview review. Review it in Studio again.";
     }
     if (voice_id == "") {
-        return "Name the HeyGen voice_id. It replaces the local voice and is often not an avatar's default voice.";
+        return "Name the HeyGen voice_id. The preview is silent, and this voice is often not an avatar's default voice.";
     }
     null
 }
 
 // The HeyGen voice must be approved in Studio before the lip-sync avatar is added.
-function lipsync_block(review: StageReview?, plan: LipsyncPlan) -> string? {
+function lipsync_block(review: StageReview?, plan: VideoPlan) -> string? {
     if (review == null) {
         return "Review the HeyGen voice in Studio before adding the lip-sync avatar.";
     }
@@ -202,7 +111,7 @@ function lipsync_block(review: StageReview?, plan: LipsyncPlan) -> string? {
 }
 
 // Body for a later `heygen video create`. voice_id is the reviewed voice. Nothing here sends it.
-function heygen_request(plan: LipsyncPlan) -> string {
+function heygen_request(plan: VideoPlan) -> string {
     let avatar = baml.json.to_string(plan.avatar_id);
     let voice = baml.json.to_string(plan.voice_id);
     let script = baml.json.to_string(plan.script);
