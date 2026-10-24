@@ -5,6 +5,8 @@ alwaysApply: true
 
 When asked for a video, write one `FilmPlan` story that matches `baml_src/film.baml` and run `baml run main -- --plan_file videos/<slug>/plan.json`. That writes one `plan.json`. `voice_id` and `avatar_id` stay empty until the Studio reviews below. Follow this order and stop at each Studio review:
 
+Studio lists composition files by filename, in alphabetical order. Keep the beats in the same order as the Notion `Scene_id` column, starting at 1. The publisher names each file `compositions/<Scene_id>-<id>.html`, so the compositions panel shows `1-hello` before `2-pipeline`. Leave the beat id as a word. A CSS selector cannot start with a digit.
+
 1. Preview cut, silent: still avatar and no voice. `baml run render_cut -- --dir videos/<slug> --cut preview` writes `renders/preview-cut.mp4` and opens HyperFrames Studio. Give the person the `studioUrl`.
 2. Wait for their review. Then `baml run approve -- --dir videos/<slug> --stage preview`, or `reject` if they say no.
 3. Add the HeyGen voice: `baml run swap_voice -- --dir videos/<slug> --voice_id <heygen-voice>`. The avatar stays a still. The preview had no voice. The `voice_id` is often not an avatar's default voice. This does not call HeyGen.

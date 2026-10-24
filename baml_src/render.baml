@@ -293,15 +293,27 @@ function scene_html(beat: Beat, palette: Palette, width: int, height: int) -> st
     }
 }
 
-function scene_host(beat: Beat, palette: Palette, start: int, width: int, height: int) -> string {
+function scene_src(number: int, id: string) -> string {
+    `compositions/${number}-${id}.html`
+}
+
+function scene_host(
+    beat: Beat,
+    palette: Palette,
+    start: int,
+    width: int,
+    height: int,
+    number: int,
+) -> string {
     let slot = format_tenths(to_tenths(beat.seconds));
     let begin = format_tenths(start);
     let values = variable_values(beat, palette);
+    let src = scene_src(number, beat.id);
     `
         <div
           id="${beat.id}"
           data-composition-id="${beat.id}"
-          data-composition-src="compositions/${beat.id}.html"
+          data-composition-src="${src}"
           data-start="${begin}"
           data-duration="${slot}"
           data-track-index="1"
@@ -317,9 +329,11 @@ function index_html(film: Film) -> string {
     //# Mount one scene host per beat on a single paused timeline
     let hosts: string[] = [];
     let cursor = 0;
+    let number = 1;
     for (let beat in film.beats) {
-        hosts.push(scene_host(beat, film.palette, cursor, film.width, film.height));
+        hosts.push(scene_host(beat, film.palette, cursor, film.width, film.height, number));
         cursor = cursor + to_tenths(beat.seconds);
+        number = number + 1;
     }
     let duration = format_tenths(cursor);
     let title = html_escape(film.title);
@@ -366,11 +380,13 @@ function index_html(film: Film) -> string {
 function render_project(film: Film) -> map<string, string> {
     let files: map<string, string> = {};
     let _index = files.set("index.html", index_html(film));
+    let number = 1;
     for (let beat in film.beats) {
         let _file = files.set(
-            `compositions/${beat.id}.html`,
+            scene_src(number, beat.id),
             scene_html(beat, film.palette, film.width, film.height),
         );
+        number = number + 1;
     }
     files
 }

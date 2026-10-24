@@ -81,13 +81,13 @@ test "demo project is a seekable HyperFrames film" {
     let film = demo_film();
     let files = render_project(film);
     let index = files.get("index.html") ?? "";
-    let open = files.get("compositions/open.html") ?? "";
+    let open = files.get("compositions/1-open.html") ?? "";
     assert.equal(sum_seconds(film.beats), 12.0);
     assert.is_true(index.includes("data-composition-id=\"main\""));
     assert.is_true(index.includes("data-duration=\"12.0\""));
-    assert.is_true(index.includes("data-composition-src=\"compositions/open.html\""));
-    assert.is_true(index.includes("data-composition-src=\"compositions/make.html\""));
-    assert.is_true(index.includes("data-composition-src=\"compositions/render.html\""));
+    assert.is_true(index.includes("data-composition-src=\"compositions/1-open.html\""));
+    assert.is_true(index.includes("data-composition-src=\"compositions/2-make.html\""));
+    assert.is_true(index.includes("data-composition-src=\"compositions/3-render.html\""));
     assert.is_true(index.includes("data-start=\"4.0\""));
     assert.is_true(index.includes("data-start=\"8.0\""));
     assert.is_true(open.includes("<template>"));
@@ -118,7 +118,7 @@ test "copy is escaped and a saved plan parses" {
             ],
         },
     );
-    let scene = render_project(film).get("compositions/marks.html") ?? "";
+    let scene = render_project(film).get("compositions/1-marks.html") ?? "";
     assert.is_true(scene.includes("A &amp; B"));
     assert.is_true(scene.includes("Less &lt; than"));
     assert.is_true(scene.includes("Quote &quot;here&quot;."));

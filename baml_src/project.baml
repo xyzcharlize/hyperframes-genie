@@ -112,6 +112,10 @@ function write_files(dir: string, film: Film) -> void {
         let body = files.get(path) ?? "";
         baml.fs.write(`${dir}/${path}`, body);
     }
+    // The numbered file replaces the old name. Studio would otherwise list both.
+    for (let beat in film.beats) {
+        drop_if_present(`${dir}/compositions/${beat.id}.html`);
+    }
 }
 
 function check_project(dir: string) -> string {
