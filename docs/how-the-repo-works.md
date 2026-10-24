@@ -4,7 +4,7 @@ Cursor writes a `FilmPlan`. BAML turns that plan into one HyperFrames folder and
 
 `origin/main` at `9b25b03` and this branch, `cursor/film-traces-4b19` at `f734c68`, run the same status pipeline. The merge-base is `4f6ee73`, so `main` is not an ancestor of this branch. `pad_number`, `baml_src/trace.baml`, and the test `scene filenames stay in order past nine` are on this branch. They are absent from `origin/main`. On `main`, scene files are `compositions/<number>-<id>.html` with no padding, and the public commands live in `project.baml`, `studio.baml`, and `notion.baml`. On this branch those commands are wrappers in `trace.baml`, and the old bodies are the `*_work` functions.
 
-Hello World is the sample. Its beats are `hello`, `pipeline`, `studio`, and `bye`, each 3.5 seconds, starting at 0, 3.5, 7.0, and 10.5. `index.html` lasts 14.0 seconds. The files are `compositions/1-hello.html`, `2-pipeline.html`, `3-studio.html`, and `4-bye.html`.
+A four-beat film with ids `hello`, `pipeline`, `studio`, and `bye`, each 3.5 seconds, starts those beats at 0, 3.5, 7.0, and 10.5. `index.html` lasts 14.0 seconds. The files are `compositions/1-hello.html`, `2-pipeline.html`, `3-studio.html`, and `4-bye.html`. `baml run main` writes `videos/<slug>` from the plan file.
 
 ## Key concepts
 
@@ -84,13 +84,13 @@ On this branch each public command goes through `with_stage`. The command runs f
 
 `baml_src/project.baml` holds the folder writer and the `*_work` command bodies. `render_take` is an extra local render. It is not one of the five steps, and `trace.baml` does not wrap it.
 
-`baml_src/studio.baml` holds `open_studio_work`. The preview command is `npx hyperframes@0.8.188 preview --background --json --no-open --port 3002`. Hello World opens at `http://127.0.0.1:3002/#project/hello-world`.
+`baml_src/studio.baml` holds `open_studio_work`. The preview command is `npx hyperframes@0.8.188 preview --background --json --no-open --port 3002`. Studio opens at `http://127.0.0.1:3002/#project/<slug>`.
 
 `baml_src/notion.baml` holds the card status map and the PATCH.
 
 `baml_src/trace.baml` and `baml_src/trace_test.baml` exist only on this branch.
 
-`videos/hello-world` is a HyperFrames 0.8.188 project. `.cursor/rules/plan-films.mdc` is the always-on planner rule. `.agents/skills` holds the BAML and HyperFrames skills.
+`.cursor/rules/plan-films.mdc` is the always-on planner rule. `.agents/skills` holds the BAML and HyperFrames skills.
 
 Gitignore covers mp4 files, `reviews.json`, `approval.json`, `heygen-request.json`, `.hyperframes`, `node_modules`, `.thumbnails`, and `.baml`. `trace.json` is not ignored.
 
@@ -100,10 +100,10 @@ The README and the `FilmPlan` description say three or four scenes, total under 
 
 Republish writes empty `voice_id` and `avatar_id`, deletes `reviews.json` and `approval.json`, and sets Status to `Preview cut`. It leaves the mp4 and `trace.json` in place. Because empty card fields are omitted, an old studio link, voice, and avatar stay on the card.
 
-The voice Studio session is the silent composition. `voice_id` is not in the HTML. `assets/avatar-still.png` is the stored still path, and that file is not in the Hello World folder. Only the `studio` beat shows an image, and that image is `assets/studio.png`.
+The voice Studio session is the silent composition. `voice_id` is not in the HTML. `still` defaults to `assets/avatar-still.png` and is not an image in the HTML. Only the `studio` beat shows an image, and that image is `assets/studio.png`.
 
 A Notion miss happens after the folder write. The command fails, and the local plan or review is already updated. With no token, the command still reports the new status.
 
-The working copy of the five Hello World HTML files has `data-hf-id` attributes. Those attributes are not in `render.baml`, not in the `HEAD` commit, and not on `origin/main`. A fresh publish emits HTML without them. Studio stamps them when the preview server is running.
+Studio stamps `data-hf-id` into composition HTML while the preview server is running. `render.baml` does not emit those attributes. A fresh publish writes HTML without them. Leave the stamps uncommitted.
 
 `with_stage` appends the trace row after the command returns, with blank times. `film_trace` fills the times from local spans. A local failure is stored as status `error`. A query row can say `user_error`. Those two rows do not match, so both can remain after `film_trace`.
