@@ -1,0 +1,53 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      background: var(--ground, #10140f);
+      color: var(--ink, #f3f7f1);
+      font-family: Inter, sans-serif;
+    }
+    #studio-stage { position: absolute; inset: 8% 6%; display: flex; gap: 48px; align-items: center; }
+    #studio-copy { flex: 1; display: flex; flex-direction: column; gap: 28px; }
+    #studio-eyebrow {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    #studio-headline {
+      margin: 0;
+      max-width: 12ch;
+      font-size: 72px;
+      font-weight: 600;
+      letter-spacing: -0.035em;
+      line-height: 0.98;
+    }
+    #studio-body { margin: 0; max-width: 22ch; font-size: 32px; line-height: 1.35; }
+    #studio-rule { width: 100%; height: 8px; background: var(--accent, #3ddc84); transform: scaleX(0); transform-origin: 0% 50%; }
+    #studio-still {
+      width: 52%;
+      height: 78%;
+      object-fit: cover;
+      object-position: left center;
+      border: 8px solid var(--accent, #3ddc84);
+    }
+  </style>
+  <div id="root" data-composition-id="studio" data-width="1920" data-height="1080" data-composition-variables="[{&quot;id&quot;:&quot;eyebrow&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Eyebrow&quot;,&quot;default&quot;:&quot;Studio&quot;},{&quot;id&quot;:&quot;headline&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Headline&quot;,&quot;default&quot;:&quot;Refine this cut&quot;},{&quot;id&quot;:&quot;body&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Body&quot;,&quot;default&quot;:&quot;Adjust this cut in Studio before the next voice.&quot;},{&quot;id&quot;:&quot;ground&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Ground&quot;,&quot;default&quot;:&quot;#10140f&quot;},{&quot;id&quot;:&quot;ink&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Ink&quot;,&quot;default&quot;:&quot;#f3f7f1&quot;},{&quot;id&quot;:&quot;accent&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Accent&quot;,&quot;default&quot;:&quot;#3ddc84&quot;}]">
+    <div id="studio-stage" class="clip" data-start="0" data-duration="3.4" data-track-index="1">
+      <div id="studio-copy">
+        <p id="studio-eyebrow" data-var-text="eyebrow">Studio</p>
+        <h1 id="studio-headline" data-var-text="headline">Refine this cut</h1>
+        <p id="studio-body" data-var-text="body">Adjust this cut in Studio before the next voice.</p>
+        <div id="studio-rule"></div>
+      </div>
+      <img id="studio-still" src="assets/studio.png" alt="" />
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#studio-rule", { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: "power1.inOut" }, 0.2);
+    window.__timelines["studio"] = tl;
+  </script>
+</template>
